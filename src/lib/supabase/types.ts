@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      players: {
+        Row: {
+          active: boolean
+          birthdate: string | null
+          category: Database["public"]["Enums"]["player_category"]
+          created_at: string
+          full_name: string
+          guardian_name: string | null
+          guardian_phone: string | null
+          height_cm: number | null
+          id: string
+          jersey_number: number | null
+          national_id: string | null
+          position: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          birthdate?: string | null
+          category: Database["public"]["Enums"]["player_category"]
+          created_at?: string
+          full_name: string
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          height_cm?: number | null
+          id?: string
+          jersey_number?: number | null
+          national_id?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          birthdate?: string | null
+          category?: Database["public"]["Enums"]["player_category"]
+          created_at?: string
+          full_name?: string
+          guardian_name?: string | null
+          guardian_phone?: string | null
+          height_cm?: number | null
+          id?: string
+          jersey_number?: number | null
+          national_id?: string | null
+          position?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -52,6 +100,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      player_category: "beet_sefer" | "league" | "bogrim"
       user_role: "coach" | "owner" | "parent"
     }
     CompositeTypes: {
@@ -180,6 +229,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      player_category: ["beet_sefer", "league", "bogrim"],
       user_role: ["coach", "owner", "parent"],
     },
   },

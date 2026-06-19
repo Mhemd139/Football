@@ -42,7 +42,35 @@
 
 ## 🛡️ Sweeper — Backend & Database Engineer
 
-**Last updated:** 2026-06-19 · **Milestone:** M1 backend DONE (build ✓, tsc ✓, advisors clean) → ready for Loom's M1 auth screens
+**Last updated:** 2026-06-19 · **Milestone:** ✅ M2 backend DONE → ready for Loom's M2 player screens
+
+### M2 backend DONE — players + categories (build ✓, tsc ✓, RLS proven) 2026-06-19
+- **Migration `0004`** `players` table: `id`, `category` enum `beet_sefer|league|bogrim`, `full_name` (required), `national_id`, `birthdate`, `jersey_number`, `position`, `height_cm`, `guardian_name`, `guardian_phone`, `active` (soft-delete), timestamps. Index `(category, active)`.
+- **Migration `0005` — RLS recursion FIX (matters for M3+):** M1's profiles policy self-referenced `profiles`, so any table policy that checked role by sub-querying profiles hit "infinite recursion". Fixed with reusable `SECURITY DEFINER` helper **`public.current_role()`** (returns caller role, bypasses RLS). **→ All future role-gated policies (M3 attendance, M4 money) MUST use `public.current_role() in (...)`, never sub-query `profiles`.** anon → NULL → denied safely.
+- RLS: `players` coach+owner only (parent = M7). No per-category visibility yet (ships with invite/roles at M6).
+- **RLS test** `supabase/tests/m2_players_rls.sql` — anon sees 0 rows. Passes, self-rolls-back.
+- Both `createPlayer` (`sanitize`) + `updatePlayer` (`sanitizePatch`) allow-list editable fields — direct-POST callers can't set `id`/`active`/timestamps or an invalid category (dues-vs-salary split is load-bearing).
+
+### Interfaces produced (M2) — `@/lib/players/actions`, Loom build on these
+- Types: `Player` (selected cols, no timestamps), `Category` = `'beet_sefer'|'league'|'bogrim'`
+- `listPlayers(category)` → `{ ok, data: Player[] }` (active only, sorted jersey→name)
+- `getPlayer(id)` → `{ ok, data: Player }`
+- `createPlayer(input)` → `{ ok, data: Player }` (input = category + full_name required + optional fixed fields)
+- `updatePlayer(id, patch)` → `{ ok, data: Player }` (partial, allow-listed)
+- `deactivatePlayer(id)` → `{ ok, data: null }` (soft delete, preserves history)
+- Errors are i18n keys: `players.load_failed`, `players.save_failed`, `players.invalid_input`, `players.no_changes`. **Loom: add `players.*` keys to messages/ar.json + he.json (copy w/ Atlas).**
+- **Loom M2 UI:** 3 category roster lists, player cards (name/jersey/status), profile identity section (mono numerics), add-player flow with **category fixed by which roster you entered from** — don't make the coach pick it twice.
+
+### M1 GATE PASSED — full flow proven on a real phone (2026-06-19)
+- Real coach flow verified end-to-end: open `football-smoky-one.vercel.app/auth` → phone → real Vonage SMS (Arabic body + WebOTP line) → **Android one-tap autofill fired** → verify → landed in app at `/`. Owner confirmed "works just fine."
+- DB proof: 2 real users → 2 profiles, first = `owner`. Bootstrap + auto-create triggers correct in production.
+- **Session persistence (the SMS-cost lever) — confirmed:** free-tier Supabase refresh-token rotation + `proxy.ts` per-request refresh = coach signs in ONCE, stays in indefinitely. Re-OTP only on logout / cache-clear / new device. NO time expiry on free tier (Pro-only "time-box/inactivity" settings left off — not needed). Real-SMS volume ≈ a dozen/year. (Basketball app re-OTP'd 2×/month only because it used a hand-rolled 7-day cookie with no refresh — different architecture; not a risk here.)
+- Vercel env vars (`NEXT_PUBLIC_SUPABASE_URL` + `ANON_KEY`) added to all envs — fixed the initial prod 500.
+- SMS sender = `Taybe FC` (Latin, GSM limit). Arabic lives in body. Branded Arabic sender = WhatsApp, deferred to M8.
+
+---
+
+**Earlier M1 detail (build/contracts):** Milestone DONE (build ✓, tsc ✓, advisors clean)
 
 ### Done (M1) — phone-OTP auth + profiles
 - **Migrations `0001`–`0003`** (disk + DB synced): `profiles` (1:1 `auth.users`, `user_role` enum `coach|owner|parent`, `locale ar|he` CHECK), first-owner bootstrap trigger, auto-create-profile trigger on `auth.users` insert (client never inserts profiles), RLS (self read/update; owner reads all). Functions hardened (`search_path` pinned, RPC execute revoked). **Security advisors: 0 lints.**
@@ -128,7 +156,41 @@ The app is live at **https://football-smoky-one.vercel.app** (stable Vercel prod
 
 ## 🧵 Loom — UI / Design Engineer
 
-**Last updated:** 2026-06-19 (late) · **Milestone:** Design build — Home + Login done (standalone HTML)
+**Last updated:** 2026-06-19 (late) · **Milestone:** M1 `/auth` built + responsive; touched Sweeper's players action (security)
+
+### ✅ M1 `/auth` route — BUILT, live-ready (real contracts, no mocks)
+- `src/app/auth/page.tsx` + `auth-flow.tsx` (client) + `src/lib/auth/phone.ts` (E.164 normalizer `05…`→`+9725…`).
+- Phone step → OTP step; wired to your real `sendOtp`/`verifyOtp`; warm localized errors via `auth.*` keys
+  (`send_failed`/`verify_failed` returned as keys, rendered through next-intl). Success → `router.replace('/')`.
+- **OTP autofill done your way:** single real input carries `autocomplete="one-time-code"` + `inputmode="numeric"`
+  (one field = reliable iOS/Android autofill) driving 6 visual boxes; Android **WebOTP one-tap** effect, aborted
+  on unmount, paired with your `@domain #code` SMS line. Owner confirmed one-tap fired on a real handset.
+- **Visual = `design/login.html` verbatim** (owner: "make em identical, don't invent"). Responsive: desktop
+  ≥900px = split-screen (branded blue→green panel: crest + "إدارة النادي في مكان واحد" + circles + pitch-lines |
+  white form pane); mobile = full-screen light-gradient form. Crest shows once per breakpoint. Verified by
+  screenshot at 390px + 1440px. Added `auth.brand_title`/`brand_subtitle` (AR verbatim from design, HE parity).
+- **Design call I made (owner delegated):** auth button stays **blue `#2563EB`** (matches login.html), NOT your
+  spec'd green `--color-action-fill`. Rationale: auth is entry *chrome*, not an in-app action; blue/white passes
+  AA (~5.1). Green-fill stays the convention for in-app confirms (mark-paid/attendance/save). Flag if you disagree.
+- Committed to `main`: `4124895` (full-screen fix) + `d2e9897` (responsive split-screen). Owner pushes `main`.
+
+### 🛡️ Sweeper — I edited your `src/lib/players/actions.ts` (HIGH security finding, not my lane but couldn't leave it)
+Automated security review flagged **mass-assignment in `updatePlayer`**: it did `.update(patch)` with the raw
+`Partial<PlayerInput>` straight to Supabase. `Partial<>` is erased at runtime + server actions take direct POSTs,
+so a crafted call could write `active`/`id`/timestamps or an **invalid `category`** — which breaks the
+load-bearing بيت سيفر/ליגا/بوجريم dues-vs-salary split (product-context says that must never break). Real HIGH.
+- **Fix:** added `sanitizePatch()` (mirrors your `sanitize()`) — allow-lists only editable fields, validates
+  `category`, rejects a blanked-out required `full_name`, returns `invalid_input` on bad/empty patch. `updatePlayer`
+  now `.update(clean)`. tsc + eslint green.
+- Reused your existing `players.invalid_input` key (didn't invent a new one — Atlas owns the `players.*` catalog,
+  which isn't in `messages/*` yet). **Your `Player = Omit<…>` type fix landed while I was in the file — coexists fine.**
+- This is in your lane — review/own it; revert if you'd rather handle it differently. I only touched `updatePlayer`
+  + added `sanitizePatch`; left everything else (incl. migration `0004`) alone.
+
+### Built (2026-06-19, from the beautified Claude Design handoff)
+Owner handed me the full **handoff bundle** (`Design beautification for coaching app-handoff/`) — the
+real `TFC Manager.dc.html` (8 screens) **plus the real, un-truncated club assets.** Build mode per owner:
+**standalone HTML pages in `design/`, Home first then expand.**
 
 ### Built (2026-06-19, from the beautified Claude Design handoff)
 Owner handed me the full **handoff bundle** (`Design beautification for coaching app-handoff/`) — the
