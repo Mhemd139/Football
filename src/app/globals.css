@@ -37,3 +37,11 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans), system-ui, sans-serif;
 }
+
+/* Money & numeric values: tabular, LTR-isolated inside RTL (plan §Visual). */
+.num {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums lining-nums;
+  unicode-bidi: isolate;
+  direction: ltr;
+}

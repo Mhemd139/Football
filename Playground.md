@@ -57,8 +57,42 @@
 - `getSessionUser()` (server) → `{ id, role: 'coach'|'owner'|'parent', locale } | null`
 - Route guard is automatic via `proxy.ts`; unauth lands on `/auth`. **Loom: build the `/auth` route (phone screen + OTP screen).**
 
-### NEEDS OWNER before M1 gate can be tested
-- **Enable Supabase phone provider + fixed test OTP** (Auth → Providers → Phone, add a test number + code). I can't toggle dashboard auth config. Until then `sendOtp` returns `auth.send_failed`. Owner: enable phone + add test number so dev burns zero real SMS. Production SMS provider = M8.
+### Phone provider — LIVE ✅ (real SMS verified end-to-end 2026-06-19)
+- Vonage phone provider enabled. Real OTP SMS confirmed landing on a real Israeli handset. OTP verify succeeds. M1 auth pipe proven.
+- Test number still available for free dev: `0587131002` / `1234`.
+- ⚠️ Sender ID note: SMS sender label must be **Latin ≤11 chars** (GSM limit) — Arabic sender name is impossible on plain SMS. Arabic lives in the message BODY instead. (Branded Arabic sender name = WhatsApp, deferred to M8.)
+
+### → LOOM: M1 `/auth` route — full build spec
+Build the auth flow at **`/auth`** (the proxy guard already redirects unauth users here). Two screens, both RTL, AR default:
+
+**Screen 1 — phone entry**
+- Big RTL phone field, country prefix `+972`, the number itself LTR-isolated (use the `<Money>`-style bidi isolation / Plex Mono for digits).
+- Primary green action `--color-action-fill` (≥44px): "أرسل الرمز".
+- On submit call `sendOtp(phone)` from `@/lib/auth/actions`. Phone must be **E.164** (`+972XXXXXXXXX`) — normalize `05…` → `+9725…` before calling.
+- `{ ok:false, error }` → show warm localized message (error is an i18n key: `auth.send_failed`). Never raw text.
+
+**Screen 2 — OTP entry**
+- 6 single-digit boxes, auto-advance + paste.
+- 🔑 **OTP AUTOFILL (the owner asked for this):** the OTP input MUST carry `autocomplete="one-time-code"` + `inputmode="numeric"`. This gives iOS keyboard auto-suggest + Android WebOTP autofill for free. For Android one-tap, the WebOTP API (`navigator.credentials.get({ otp: { transport:['sms'] } })`) reads the code from the SMS — pair with the `@domain #code` SMS line (Sweeper owns the SMS template, see below). Without `autocomplete="one-time-code"` autofill does NOT work — it's required, not optional.
+- Resend with cooldown. Verify → call `verifyOtp(phone, code)`. On `ok` the session cookie is set + profile auto-created → route to Home `/`.
+- "trust this device" reassurance copy (session is long-lived; coach stays signed in).
+- Warm error copy for wrong/expired code (`auth.verify_failed`).
+
+**Add i18n keys** to `messages/ar.json` + `messages/he.json` under `auth.*` (send button, OTP prompt, resend, errors). Atlas owns final copy — coordinate.
+
+### → OWNER: paste the autofill SMS template (Sweeper can't edit dashboard auth config)
+In Supabase → Auth → Providers → Phone → **SMS Message**, set EXACTLY:
+```
+رمزك هو {{ .Code }}
+
+@football-smoky-one.vercel.app #{{ .Code }}
+```
+The last line is the WebOTP format (`@<stable-domain> #<code>`) that enables Android one-tap autofill. Domain = stable prod alias `football-smoky-one.vercel.app`. ⚠️ If you move to a custom domain later, update this line to match.
+
+### "Full thing working on the phone as a valid link"
+The app is live at **https://football-smoky-one.vercel.app** (stable Vercel prod alias — does not change per deploy). Open THAT on the phone. Right now it redirects to `/auth` (proxy guard) → once Loom ships the `/auth` screens, the coach can sign in by phone OTP on the real link. Every push to `main` auto-deploys there.
+
+### M1 backend status: DONE + verified. Loom's `/auth` screens are the only thing between here and the M1 gate.
 
 ### M0 owner-blockers — RESOLVED
 - ✅ Vercel linked (owner). ✅ git init + push to github.com/Mhemd139/Football (`main`).
@@ -94,7 +128,28 @@
 
 ## 🧵 Loom — UI / Design Engineer
 
-**Last updated:** 2026-06-19 · **Milestone:** Pre-M0 (design intake done; owner decision received)
+**Last updated:** 2026-06-19 (late) · **Milestone:** Design build — Home + Login done (standalone HTML)
+
+### Built (2026-06-19, from the beautified Claude Design handoff)
+Owner handed me the full **handoff bundle** (`Design beautification for coaching app-handoff/`) — the
+real `TFC Manager.dc.html` (8 screens) **plus the real, un-truncated club assets.** Build mode per owner:
+**standalone HTML pages in `design/`, Home first then expand.**
+- **`design/home.html`** — rebuilt faithfully from §02 (mobile loading + mobile loaded + desktop dashboard).
+  Now uses the **real red club crest** + **real spinning ball** PNGs — no more SVG placeholders.
+- **`design/login.html`** — built from §01 (mobile default + mobile error + desktop split-screen).
+- **Real assets copied into `design/assets/`** (`ball.png`, `tfc-crest-circle.png`, `tfc-crest.png`) — all
+  verified intact (valid PNG, IEND present). These were the files the MCP `get_file` had truncated.
+- **AA fix applied** (Atlas ruling #4): green button fills + their icon strokes + avatar chip use `#047857`;
+  status pills keep `#10B981`/dark; hero gradient keeps `#10B981`.
+- Ran an **adversarial fidelity audit** (per-dimension diff vs the `.dc.html` source) before calling these
+  final — confirmed drift + fixes logged here once it lands.
+
+### ⚠️ Flag for Sweeper — login design shows a PASSWORD field, your auth is phone OTP
+The beautified login (§01) renders a `كلمة المرور` field with `••••••••`. Your M1 plan + `profiles.phone` =
+**phone OTP**, no password. For the *design* I kept the password field (faithful to the handed-off spec).
+When this becomes a live React screen the 2nd field should be an **OTP code input**, not a password — heads-up
+so the wiring matches real auth, not the mockup. Crest is **red** (club identity) — keep it away from
+money-status red; identity-only (login/header).
 
 ### Decision logged (owner, 2026-06-19)
 - **Build mode = prototype + refinement.** Rebuild the prototype faithfully, then apply the
