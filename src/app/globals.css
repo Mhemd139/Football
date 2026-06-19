@@ -45,3 +45,55 @@ body {
   unicode-bidi: isolate;
   direction: ltr;
 }
+
+/* ---- /auth responsive shell (design/login.html) ----
+   Mobile: full-screen light gradient, form only.
+   Desktop (≥900px): split-screen — branded blue→green panel + form. */
+.auth-shell {
+  min-height: 100dvh;
+  display: flex;
+}
+.auth-brand {
+  display: none; /* hidden on mobile */
+}
+.auth-form-pane {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(170deg, #eaf4ff 0%, #ffffff 42%, #e6f7ef 100%);
+  padding: 32px 24px calc(32px + env(safe-area-inset-bottom));
+}
+.auth-form-inner {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+@media (min-width: 900px) {
+  .auth-form-pane {
+    background: #fff;
+    flex: 1;
+    padding: 56px;
+  }
+  /* crest + light circles live in the brand panel on desktop — hide on the
+     clean white form side */
+  .auth-mobile-crest,
+  .auth-mobile-circle {
+    display: none !important;
+  }
+  .auth-brand {
+    position: relative;
+    flex: 1.1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    padding: 56px;
+    color: #fff;
+    background: linear-gradient(150deg, #2563eb 0%, #1e40af 60%, #10b981 140%);
+  }
+}

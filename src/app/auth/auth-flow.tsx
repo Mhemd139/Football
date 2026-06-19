@@ -54,32 +54,60 @@ export function AuthFlow() {
   );
 }
 
-/* Shared chrome — the login.html gradient face filling the whole screen, with
-   the decorative circles, content vertically centered (crest, heading, body). */
-function AuthCard({ children }: { children: ReactNode }) {
+/* Responsive shell (design/login.html): mobile = full-screen light gradient
+   form; desktop ≥900px = split-screen with a branded blue→green panel. */
+function AuthCard({ t, children }: { t: Translate; children: ReactNode }) {
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        background:
-          "linear-gradient(170deg, #EAF4FF 0%, #FFFFFF 42%, #E6F7EF 100%)",
-        position: "relative",
-        overflow: "hidden",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        padding: "32px 24px calc(32px + env(safe-area-inset-bottom))",
-      }}
-    >
+    <div className="auth-shell">
+      <BrandPanel t={t} />
+      <div className="auth-form-pane">
+        {/* decorative circles — only on the mobile light gradient */}
+        <div
+          aria-hidden
+          className="auth-mobile-circle"
+          style={{
+            position: "absolute",
+            right: -60,
+            top: -60,
+            width: 220,
+            height: 220,
+            border: "2px solid rgba(16,185,129,.16)",
+            borderRadius: "50%",
+          }}
+        />
+        <div
+          aria-hidden
+          className="auth-mobile-circle"
+          style={{
+            position: "absolute",
+            left: -50,
+            top: 60,
+            width: 150,
+            height: 150,
+            border: "2px solid rgba(37,99,235,.14)",
+            borderRadius: "50%",
+          }}
+        />
+        <div className="auth-form-inner">{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* Desktop-only branded panel: crest, club tagline, decorative circles,
+   pitch-line texture over the blue→green gradient. */
+function BrandPanel({ t }: { t: Translate }) {
+  return (
+    <div className="auth-brand">
       <div
         aria-hidden
         style={{
           position: "absolute",
           right: -60,
           top: -60,
-          width: 220,
-          height: 220,
-          border: "2px solid rgba(16,185,129,.16)",
+          width: 280,
+          height: 280,
+          border: "2px solid rgba(255,255,255,.18)",
           borderRadius: "50%",
         }}
       />
@@ -88,22 +116,67 @@ function AuthCard({ children }: { children: ReactNode }) {
         style={{
           position: "absolute",
           left: -50,
-          top: 60,
-          width: 150,
-          height: 150,
-          border: "2px solid rgba(37,99,235,.14)",
+          bottom: -50,
+          width: 200,
+          height: 200,
+          border: "2px solid rgba(255,255,255,.14)",
           borderRadius: "50%",
         }}
       />
       <div
+        aria-hidden
         style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: 380,
-          margin: "0 auto",
+          position: "absolute",
+          inset: 0,
+          opacity: 0.5,
+          backgroundImage:
+            "repeating-linear-gradient(90deg, transparent 0 58px, rgba(255,255,255,.06) 58px 60px)",
         }}
-      >
-        {children}
+      />
+      <div style={{ position: "relative" }}>
+        <div
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: "50%",
+            overflow: "hidden",
+            boxShadow: "0 8px 22px rgba(0,0,0,.18)",
+            marginBottom: 24,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/assets/tfc-crest-circle.png"
+            alt={t("club")}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+          />
+        </div>
+        <h2
+          style={{
+            margin: "0 0 10px",
+            fontSize: 32,
+            fontWeight: 700,
+            lineHeight: 1.12,
+          }}
+        >
+          {t("brand_title")}
+        </h2>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 15,
+            color: "rgba(255,255,255,.82)",
+            maxWidth: 320,
+            lineHeight: 1.6,
+          }}
+        >
+          {t("brand_subtitle")}
+        </p>
       </div>
     </div>
   );
@@ -184,6 +257,7 @@ function CrestHeader({ t, title }: { t: Translate; title: string }) {
   return (
     <>
       <div
+        className="auth-mobile-crest"
         style={{
           width: 76,
           height: 76,
@@ -281,7 +355,7 @@ function PhoneStep({
   }
 
   return (
-    <AuthCard>
+    <AuthCard t={t}>
       <CrestHeader t={t} title={t("phone_title")} />
       <form onSubmit={submit} noValidate>
         <FieldLabel>{t("phone_label")}</FieldLabel>
@@ -431,7 +505,7 @@ function OtpStep({
   }
 
   return (
-    <AuthCard>
+    <AuthCard t={t}>
       <CrestHeader t={t} title={t("otp_title")} />
       <p
         style={{
