@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/* ponytail: token VALUES from plan §3 binding visual system; Loom owns refinement.
+   Light theme only — no dark block (plan: "Light theme only"). */
+:root {
+  --color-chrome: #2563eb; /* UI/chrome & nav */
+  --color-action: #10b981; /* action token: status pills w/ DARK labels */
+  --color-action-fill: #047857; /* Atlas ruling #4: green button fills w/ WHITE text (AA ~5.5:1) */
+  --color-surface: #ffffff;
+  --color-ink: #0b1a2e; /* text */
+
+  /* money status (reserved, never reused for chrome) */
+  --color-money-paid: #10b981;
+  --color-money-partial: #b45309;
+  --color-money-overdue: #c0392b;
+  --color-money-upcoming: #2563eb;
+
+  /* attendance (same everywhere) */
+  --color-attend-present: #10b981;
+  --color-attend-late: #f59e0b;
+  --color-attend-absent: #c0392b;
+}
+
+@theme inline {
+  --color-background: var(--color-surface);
+  --color-foreground: var(--color-ink);
+  --color-chrome: var(--color-chrome);
+  --color-action: var(--color-action);
+  --color-ink: var(--color-ink);
+  --color-surface: var(--color-surface);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
