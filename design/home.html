@@ -4,232 +4,166 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>TFC Manager — الرئيسية</title>
-<script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: {
-        ink:      '#0B1A2E',
-        chrome:   '#2563EB',
-        action:   '#047857',   // AA-safe green for fills + white text (Atlas ruling)
-        bright:   '#10B981',   // status pills w/ dark labels
-        amber:    '#F59E0B',
-        amberInk: '#B45309',
-        red:      '#C0392B',
-        muted:    '#51637A',
-        muted2:   '#6B7A8D',
-        hairline: '#E3EAF1',
-        app:      '#EEF2F6',
-        surf2:    '#F4F7FB',
-      },
-      fontFamily: {
-        sans: ['"IBM Plex Sans Arabic"', 'system-ui', 'sans-serif'],
-        mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
-      },
-    }
-  }
-}
-</script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Sans+Hebrew:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  body { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
-  .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; font-feature-settings: 'tnum' 1; direction: ltr; unicode-bidi: isolate; display: inline-block; }
-  .crest-breathe { animation: breathe 6s ease-in-out infinite; }
-  @keyframes breathe { 0%,100%{transform:scale(1);opacity:.9} 50%{transform:scale(1.04);opacity:1} }
-  @media (prefers-reduced-motion: reduce){ .crest-breathe{animation:none} }
-  .phone { width: 390px; box-shadow: 0 30px 60px -20px rgba(11,26,46,.35), 0 0 0 10px #0B1A2E, 0 0 0 11px #1e2d40; border-radius: 44px; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #EEF2F6; -webkit-font-smoothing: antialiased; font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #0F1B2D; }
+  .num { font-variant-numeric: tabular-nums lining-nums; unicode-bidi: isolate; direction: ltr; }
+  @keyframes tfc-spin { to { transform: rotate(360deg); } }
+  @keyframes tfc-shimmer { from { background-position: 220% 0; } to { background-position: -220% 0; } }
+  @keyframes tfc-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .skl { background: linear-gradient(100deg, #E3EAF1 30%, #F2F6FA 50%, #E3EAF1 70%); background-size: 220% 100%; animation: tfc-shimmer 1.4s linear infinite; border-radius: 8px; }
+  @media (prefers-reduced-motion: reduce) { *, .skl { animation-duration: .001ms !important; animation-iteration-count: 1 !important; } }
 </style>
 </head>
-<body class="bg-app min-h-screen flex items-start justify-center p-8 gap-8 flex-wrap">
+<body>
 
-<!-- ============ MOBILE: HOME (coach, primary surface) ============ -->
-<div class="phone bg-app overflow-hidden relative" style="height:844px">
+<!-- crest + ball as reusable inline SVG symbols (real PNGs exceed the MCP 256KB cap; faithful SVG substitute) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="crest" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="20" fill="#0B1A2E"/>
+    <circle cx="20" cy="20" r="16" fill="none" stroke="#2563EB" stroke-width="1.4"/>
+    <circle cx="20" cy="19" r="8.6" fill="none" stroke="#10B981" stroke-width="1.4"/>
+    <path d="M20 12.4l6.2 4.5-2.4 7.3h-7.6L13.8 16.9z" fill="#10B981"/>
+  </symbol>
+  <symbol id="ball" viewBox="0 0 48 48">
+    <circle cx="24" cy="24" r="22" fill="#fff" stroke="#0B1A2E" stroke-width="2.4"/>
+    <path d="M24 11l8.2 6-3.1 9.7H17.9L14.8 17z" fill="#0B1A2E"/>
+    <path d="M24 11V4.5M32.2 17l6.6-3.2M28.9 26.7l4.9 5.6M19.1 26.7l-4.9 5.6M15.8 17l-6.6-3.2" fill="none" stroke="#0B1A2E" stroke-width="2.4" stroke-linecap="round"/>
+  </symbol>
+</svg>
 
-  <!-- status bar -->
-  <div class="flex items-center justify-between px-6 pt-3 pb-1 text-ink text-xs font-semibold">
-    <span class="mono">9:41</span>
-    <span>●●● ▮</span>
+<div style="max-width: 1340px; margin: 0 auto; padding: 40px 32px;">
+  <div style="display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px;">
+    <span class="num" style="font-family: 'IBM Plex Mono', monospace; font-size: 14px; font-weight: 600; color: #2563EB;">02</span>
+    <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #0B1A2E;">الرئيسية — يوم المدرّب</h2>
+    <span style="font-size: 14px; color: #6B7A8D;">المحور الأساسي · تحية الصباح، لقطة اليوم، إجراءات سريعة</span>
   </div>
+  <p style="margin: 0 0 26px; font-size: 14px; color: #6B7A8D; padding-inline-start: 30px;">حالة التحميل بمُحمّل حركي · الحالة المحمّلة · سطح المكتب.</p>
 
-  <!-- top bar: crest + name + language toggle (top-leading = right in RTL) -->
-  <header class="flex items-center justify-between px-5 pt-2 pb-3">
-    <div class="flex items-center gap-2.5">
-      <!-- crest -->
-      <svg width="34" height="34" viewBox="0 0 40 40" class="crest-breathe" aria-hidden="true">
-        <path d="M20 2 L36 8 V20 C36 30 28 36 20 38 C12 36 4 30 4 20 V8 Z" fill="#0B1A2E"/>
-        <path d="M20 2 L36 8 V20 C36 30 28 36 20 38 C12 36 4 30 4 20 V8 Z" fill="none" stroke="#2563EB" stroke-width="1.5"/>
-        <circle cx="20" cy="19" r="8" fill="none" stroke="#10B981" stroke-width="1.6"/>
-        <path d="M20 13 l5.5 4 -2.1 6.5 h-6.8 L14.5 17 Z" fill="#10B981"/>
-      </svg>
-      <div class="leading-tight">
-        <p class="text-ink font-700 text-[15px] font-bold">نادي الطيبة</p>
-        <p class="text-muted2 text-[11px]">TFC Manager</p>
+  <div style="display: flex; gap: 36px; flex-wrap: wrap; align-items: flex-start;">
+
+    <!-- Home loading -->
+    <div style="flex: none;">
+      <div style="font-size: 13px; font-weight: 600; color: #51637A; margin-bottom: 10px;">الجوال · تحميل</div>
+      <div style="width: 300px; height: 620px; background: #0B1A2E; border-radius: 42px; padding: 9px; box-shadow: 0 22px 54px rgba(11,26,46,.18);">
+        <div style="position: relative; width: 100%; height: 100%; background: #F4F7FB; border-radius: 34px; overflow: hidden; display: flex; flex-direction: column;">
+          <div style="background: linear-gradient(135deg, #10B981 0%, #2563EB 100%); padding: 50px 22px 26px; position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; opacity: .5; background-image: repeating-linear-gradient(90deg, transparent 0 44px, rgba(255,255,255,.08) 44px 46px);"></div>
+            <div class="skl" style="width: 140px; height: 14px; background: rgba(255,255,255,.4); margin-bottom: 12px;"></div>
+            <div class="skl" style="width: 190px; height: 22px; background: rgba(255,255,255,.5);"></div>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;">
+            <svg style="width:52px;height:52px;animation:tfc-spin 1.1s linear infinite;filter:drop-shadow(0 4px 7px rgba(11,26,46,.2));"><use href="#ball"/></svg>
+            <div style="font-size: 13px; color: #6B7A8D; font-weight: 600;">جارٍ تحميل يومك…</div>
+            <div style="display: flex; flex-direction: column; gap: 12px; width: 80%; margin-top: 8px;">
+              <div class="skl" style="height: 64px;"></div>
+              <div class="skl" style="height: 64px;"></div>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-around; align-items: center; padding: 12px 6px 22px; background: #fff; border-top: 1px solid #EEF2F6;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 9v11h14V9"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><path d="M8 3l-5 3 1.5 4L7 9v11h10V9l2.5 1L21 6l-5-3-2 2a3 3 0 01-4 0L8 3z"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.6-.7-1.6-1-2.7-1-1.6 0-2.8.8-2.8 2 0 2.8 5.8 1.4 5.8 4 0 1.3-1.3 2-3 2-1.2 0-2.3-.4-2.9-1.1M12 6.5v11"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          </div>
+        </div>
       </div>
     </div>
-    <button class="text-[13px] font-semibold text-chrome bg-chrome/10 rounded-full px-3 py-1.5" aria-label="تبديل اللغة إلى العبرية">ע / ع</button>
-  </header>
 
-  <div class="px-4 pb-28 space-y-4 overflow-y-auto" style="height:calc(844px - 96px)">
-
-    <!-- HERO: navy→blue identity gradient (chrome colors; white text passes AA), crest watermark, scoreboard -->
-    <section class="relative rounded-3xl overflow-hidden p-5 pt-6 text-white"
-             style="background:linear-gradient(135deg,#0B1A2E 0%,#15356b 55%,#2563EB 130%)">
-      <svg width="150" height="150" viewBox="0 0 40 40" class="absolute -left-6 -bottom-8 opacity-[.07]" aria-hidden="true">
-        <circle cx="20" cy="20" r="14" fill="none" stroke="#fff" stroke-width="1.5"/>
-        <path d="M20 9 l9 6.5 -3.4 10.6 h-11.2 L11 15.5 Z" fill="#fff"/>
-      </svg>
-      <p class="text-white/70 text-[13px] mb-0.5">صباح الخير 👋</p>
-      <h1 class="text-[22px] font-bold mb-4">كابتن أمير، جاهز ليومك؟</h1>
-      <div class="grid grid-cols-3 gap-2.5">
-        <div class="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
-          <p class="text-white/60 text-[11px] mb-1">حُصّل هذا الشهر</p>
-          <p class="font-bold leading-none"><span class="mono text-[19px]">₪18,400</span></p>
-        </div>
-        <div class="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
-          <p class="text-white/60 text-[11px] mb-1">لاعبون نشطون</p>
-          <p class="font-bold leading-none"><span class="mono text-[19px]">58</span></p>
-        </div>
-        <div class="bg-white/10 rounded-2xl p-3 backdrop-blur-sm">
-          <p class="text-white/60 text-[11px] mb-1">حصص اليوم</p>
-          <p class="font-bold leading-none"><span class="mono text-[19px]">3</span></p>
-        </div>
-      </div>
-    </section>
-
-    <!-- NEEDS ATTENTION -->
-    <section class="space-y-2.5">
-      <h2 class="text-muted text-[13px] font-semibold px-1">يحتاج انتباهك</h2>
-
-      <!-- overdue dues (amber) -->
-      <button class="w-full flex items-center gap-3 bg-white rounded-2xl p-3.5 text-right shadow-sm border border-hairline active:scale-[.99] transition">
-        <span class="grid place-items-center w-11 h-11 rounded-xl shrink-0" style="background:#FEF3E2">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.2"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-        </span>
-        <span class="flex-1">
-          <span class="block text-ink text-[14px] font-semibold">مستحقات متأخرة</span>
-          <span class="block text-muted2 text-[12px]">٧ لاعبين عليهم دفعات</span>
-        </span>
-        <span class="text-left">
-          <span class="mono text-[16px] font-bold text-red">₪2,140</span>
-          <svg class="inline mr-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-        </span>
-      </button>
-
-      <!-- unsynced attendance (blue chrome / info) -->
-      <button class="w-full flex items-center gap-3 bg-white rounded-2xl p-3.5 text-right shadow-sm border border-hairline active:scale-[.99] transition">
-        <span class="grid place-items-center w-11 h-11 rounded-xl shrink-0" style="background:#EAF0FB">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
-        </span>
-        <span class="flex-1">
-          <span class="block text-ink text-[14px] font-semibold">حضور بانتظار المزامنة</span>
-          <span class="block text-muted2 text-[12px]">حصّتان — تُرفع عند الاتصال</span>
-        </span>
-        <svg class="text-left" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
-    </section>
-
-    <!-- TODAY'S SCHEDULE — matchday fixture cards -->
-    <section class="space-y-2.5">
-      <div class="flex items-center justify-between px-1">
-        <h2 class="text-muted text-[13px] font-semibold">جدول اليوم</h2>
-        <a class="text-chrome text-[12px] font-semibold">عرض التقويم</a>
-      </div>
-
-      <div class="bg-white rounded-2xl shadow-sm border border-hairline divide-y divide-hairline overflow-hidden">
-        <!-- training -->
-        <div class="flex items-center gap-3 p-3.5">
-          <div class="text-center shrink-0 w-12">
-            <p class="mono text-[15px] font-bold text-ink">16:00</p>
+    <!-- Home loaded -->
+    <div style="flex: none;">
+      <div style="font-size: 13px; font-weight: 600; color: #51637A; margin-bottom: 10px;">الجوال · محمّل ✦</div>
+      <div style="width: 300px; height: 620px; background: #0B1A2E; border-radius: 42px; padding: 9px; box-shadow: 0 22px 54px rgba(11,26,46,.18);">
+        <div style="position: relative; width: 100%; height: 100%; background: #F4F7FB; border-radius: 34px; overflow: hidden; display: flex; flex-direction: column;">
+          <div style="background: linear-gradient(135deg, #10B981 0%, #2563EB 100%); padding: 46px 22px 22px; position: relative; overflow: hidden;">
+            <div style="position: absolute; inset: 0; opacity: .55; background-image: repeating-linear-gradient(90deg, transparent 0 44px, rgba(255,255,255,.09) 44px 46px);"></div>
+            <div style="position: absolute; left: -30px; top: -20px; width: 120px; height: 120px; border: 2px solid rgba(255,255,255,.2); border-radius: 50%;"></div>
+            <div style="position: relative; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; gap: 8px; color: #fff;"><div style="width: 34px; height: 34px; border-radius: 50%; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,.18);"><svg style="width:100%;height:100%;display:block"><use href="#crest"/></svg></div><span style="font-size: 13px; font-weight: 600;">الطيبة</span></div>
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,.22); display: grid; place-items: center; color: #fff;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.5 21a2 2 0 01-3 0"/></svg></div>
+            </div>
+            <div style="position: relative; display: flex; align-items: center; gap: 7px; color: rgba(255,255,255,.9); font-size: 13px; font-weight: 500; margin-bottom: 3px;"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>صباح الخير</div>
+            <h3 style="position: relative; margin: 0 0 14px; font-size: 24px; font-weight: 700; color: #fff;">كابتن أمير 👋</h3>
+            <div style="position: relative; display: flex; gap: 8px;">
+              <div style="flex: 1; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22); border-radius: 13px; padding: 11px 12px;"><div style="font-size: 11px; color: rgba(255,255,255,.85);">حصص اليوم</div><div class="num" style="font-size: 21px; font-weight: 700; color: #fff;">3</div></div>
+              <div style="flex: 1; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.22); border-radius: 13px; padding: 11px 12px;"><div style="font-size: 11px; color: rgba(255,255,255,.85);">لاعبون</div><div class="num" style="font-size: 21px; font-weight: 700; color: #fff;">64</div></div>
+            </div>
           </div>
-          <span class="w-1.5 h-10 rounded-full" style="background:#2563EB"></span>
-          <div class="flex-1">
-            <p class="text-ink text-[14px] font-semibold">تدريب — بيت سيفر</p>
-            <p class="text-muted2 text-[12px]">الملعب الرئيسي · ٢٢ لاعب</p>
+          <div style="flex: 1; overflow: hidden; padding: 16px 18px;">
+            <div style="font-size: 12px; font-weight: 700; color: #51637A; margin-bottom: 10px;">إجراءات سريعة</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 18px;">
+              <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 12px 6px; text-align: center;"><div style="width: 36px; height: 36px; margin: 0 auto 7px; border-radius: 11px; background: #E7F8F0; display: grid; place-items: center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.6-.7-1.6-1-2.7-1-1.6 0-2.8.8-2.8 2 0 2.8 5.8 1.4 5.8 4 0 1.3-1.3 2-3 2-1.2 0-2.3-.4-2.9-1.1M12 6.5v11"/></svg></div><div style="font-size: 10.5px; font-weight: 600; color: #0B1A2E;">تسجيل دفعة</div></div>
+              <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 12px 6px; text-align: center;"><div style="width: 36px; height: 36px; margin: 0 auto 7px; border-radius: 11px; background: #EAF0FB; display: grid; place-items: center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8"><path d="M20 6L9 17l-5-5"/></svg></div><div style="font-size: 10.5px; font-weight: 600; color: #0B1A2E;">أخذ حضور</div></div>
+              <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 12px 6px; text-align: center;"><div style="width: 36px; height: 36px; margin: 0 auto 7px; border-radius: 11px; background: #F4F7FB; display: grid; place-items: center;"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#51637A" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4M12 13v4M10 15h4"/></svg></div><div style="font-size: 10.5px; font-weight: 600; color: #0B1A2E;">حدث جديد</div></div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; background: #FDF2F2; border: 1px solid #F3C9C4; border-radius: 13px; padding: 11px 13px; margin-bottom: 16px;"><div style="width: 32px; height: 32px; border-radius: 9px; background: #FBDAD5; display: grid; place-items: center; flex: none;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg></div><div style="flex: 1;"><div style="font-size: 12.5px; font-weight: 700; color: #0B1A2E;">٧ لاعبين متأخرون عن السداد</div><div class="num" style="font-size: 11px; color: #C0392B;">إجمالي ₪ 2,140</div></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg></div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;"><span style="font-size: 12px; font-weight: 700; color: #51637A;">حصص اليوم</span><span style="font-size: 11px; color: #2563EB; font-weight: 600;">الكل</span></div>
+            <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 11px; margin-bottom: 9px;"><div style="text-align: center; flex: none;"><div class="num" style="font-size: 16px; font-weight: 700; color: #2563EB;">16:00</div><div style="font-size: 9px; color: #94A3B8;">90د</div></div><div style="width: 1px; align-self: stretch; background: #EEF2F6;"></div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 600; color: #0B1A2E;">تدريب — بيت سيفر</div><div style="font-size: 11px; color: #6B7A8D;">الملعب الرئيسي</div></div><span style="padding: 3px 9px; border-radius: 999px; background: #E7F8F0; color: #047857; font-size: 10px; font-weight: 700;">جاهز</span></div>
+            <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 12px; display: flex; align-items: center; gap: 11px;"><div style="text-align: center; flex: none;"><div class="num" style="font-size: 16px; font-weight: 700; color: #2563EB;">18:30</div><div style="font-size: 9px; color: #94A3B8;">90د</div></div><div style="width: 1px; align-self: stretch; background: #EEF2F6;"></div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 600; color: #0B1A2E;">مباراة — ليجا</div><div style="font-size: 11px; color: #6B7A8D;">ضد هـ. كفر قاسم</div></div><span style="padding: 3px 9px; border-radius: 999px; background: #FEF3E2; color: #B45309; font-size: 10px; font-weight: 700;">قريبًا</span></div>
           </div>
-          <span class="text-[11px] font-semibold px-2 py-1 rounded-lg" style="background:#EAF0FB;color:#2563EB">تدريب</span>
-        </div>
-        <!-- match -->
-        <div class="flex items-center gap-3 p-3.5">
-          <div class="text-center shrink-0 w-12">
-            <p class="mono text-[15px] font-bold text-ink">18:30</p>
+          <div style="display: flex; justify-content: space-around; align-items: center; padding: 12px 6px 22px; background: #fff; border-top: 1px solid #EEF2F6;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#EAF0FB" stroke="#2563EB" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 9v11h14V9"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><path d="M8 3l-5 3 1.5 4L7 9v11h10V9l2.5 1L21 6l-5-3-2 2a3 3 0 01-4 0L8 3z"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.6-.7-1.6-1-2.7-1-1.6 0-2.8.8-2.8 2 0 2.8 5.8 1.4 5.8 4 0 1.3-1.3 2-3 2-1.2 0-2.3-.4-2.9-1.1M12 6.5v11"/></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C2CDD9" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
           </div>
-          <span class="w-1.5 h-10 rounded-full" style="background:#047857"></span>
-          <div class="flex-1">
-            <p class="text-ink text-[14px] font-semibold">مباراة — ليجا</p>
-            <p class="text-muted2 text-[12px]">ضد هبوعيل · ملعب البلدية</p>
-          </div>
-          <span class="text-[11px] font-semibold px-2 py-1 rounded-lg" style="background:#E7F8F0;color:#047857">مباراة</span>
-        </div>
-        <!-- bogrim session -->
-        <div class="flex items-center gap-3 p-3.5">
-          <div class="text-center shrink-0 w-12">
-            <p class="mono text-[15px] font-bold text-ink">20:00</p>
-          </div>
-          <span class="w-1.5 h-10 rounded-full" style="background:#6B7A8D"></span>
-          <div class="flex-1">
-            <p class="text-ink text-[14px] font-semibold">لقاء — بوجريم</p>
-            <p class="text-muted2 text-[12px]">صالة النادي</p>
-          </div>
-          <span class="text-[11px] font-semibold px-2 py-1 rounded-lg" style="background:#F4F7FB;color:#51637A">الفريق الأول</span>
         </div>
       </div>
-    </section>
+    </div>
 
-    <!-- QUICK ACTIONS — capped at 3 (Hick) -->
-    <section class="grid grid-cols-3 gap-2.5">
-      <button class="flex flex-col items-center gap-1.5 bg-action text-white rounded-2xl py-3.5 shadow-sm active:scale-[.97] transition">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        <span class="text-[12px] font-semibold">تسجيل حضور</span>
-      </button>
-      <button class="flex flex-col items-center gap-1.5 bg-white text-ink border border-hairline rounded-2xl py-3.5 shadow-sm active:scale-[.97] transition">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-        <span class="text-[12px] font-semibold">قبض دفعة</span>
-      </button>
-      <button class="flex flex-col items-center gap-1.5 bg-white text-ink border border-hairline rounded-2xl py-3.5 shadow-sm active:scale-[.97] transition">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
-        <span class="text-[12px] font-semibold">إضافة لاعب</span>
-      </button>
-    </section>
+    <!-- Home desktop -->
+    <div style="flex: 1; min-width: 600px;">
+      <div style="font-size: 13px; font-weight: 600; color: #51637A; margin-bottom: 10px;">سطح المكتب · لوحة المدرّب</div>
+      <div style="border-radius: 16px; overflow: hidden; box-shadow: 0 22px 54px rgba(11,26,46,.16); border: 1px solid #DCE6F0; background: #F4F7FB;">
+        <div style="height: 34px; background: #fff; border-bottom: 1px solid #EEF2F6; display: flex; align-items: center; padding: 0 14px; gap: 7px;"><span style="width: 11px; height: 11px; border-radius: 50%; background: #FF5F57;"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #FEBC2E;"></span><span style="width: 11px; height: 11px; border-radius: 50%; background: #28C840;"></span><span style="margin-inline-start: 14px; font-size: 12px; color: #94A3B8;">app.tfc.club</span></div>
+        <div style="display: flex; height: 540px;">
+          <div style="width: 196px; flex: none; background: #fff; border-inline-start: 1px solid #EEF2F6; padding: 20px 14px; display: flex; flex-direction: column;">
+            <div style="display: flex; align-items: center; gap: 9px; padding: 0 6px 18px;"><div style="width: 38px; height: 38px; border-radius: 11px; background: #F4F7FB; display: grid; place-items: center;"><svg style="width:30px;height:30px"><use href="#crest"/></svg></div><div><div style="font-size: 13px; font-weight: 700; color: #0B1A2E;">الطيبة</div><div style="font-size: 10px; color: #94A3B8;">لوحة المدرّب</div></div></div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 11px; background: #EAF0FB; color: #2563EB; font-size: 13px; font-weight: 700; margin-bottom: 4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 9v11h14V9"/></svg>الرئيسية</div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 11px; color: #51637A; font-size: 13px; font-weight: 500; margin-bottom: 4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8"><path d="M8 3l-5 3 1.5 4L7 9v11h10V9l2.5 1L21 6l-5-3-2 2a3 3 0 01-4 0L8 3z"/></svg>اللاعبون</div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 11px; color: #51637A; font-size: 13px; font-weight: 500; margin-bottom: 4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>التقويم</div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 11px; color: #51637A; font-size: 13px; font-weight: 500; margin-bottom: 4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.2c-.6-.7-1.6-1-2.7-1-1.6 0-2.8.8-2.8 2 0 2.8 5.8 1.4 5.8 4 0 1.3-1.3 2-3 2-1.2 0-2.3-.4-2.9-1.1M12 6.5v11"/></svg>المالية</div>
+            <div style="display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 11px; color: #51637A; font-size: 13px; font-weight: 500;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>الإدارة</div>
+            <div style="margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 8px 6px; border-top: 1px solid #EEF2F6;"><div style="width: 32px; height: 32px; border-radius: 50%; background: #10B981; color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 700;">أ</div><div><div style="font-size: 12px; font-weight: 600; color: #0B1A2E;">كابتن أمير</div><div style="font-size: 10px; color: #94A3B8;">مدرّب رئيسي</div></div></div>
+          </div>
+          <div style="flex: 1; overflow: hidden; padding: 26px 28px;">
+            <div style="background: linear-gradient(120deg, #10B981 0%, #2563EB 100%); border-radius: 18px; padding: 26px 28px; position: relative; overflow: hidden; margin-bottom: 22px;">
+              <div style="position: absolute; inset: 0; opacity: .5; background-image: repeating-linear-gradient(90deg, transparent 0 60px, rgba(255,255,255,.08) 60px 62px);"></div>
+              <div style="position: absolute; right: -30px; top: -40px; width: 160px; height: 160px; border: 2px solid rgba(255,255,255,.18); border-radius: 50%;"></div>
+              <div style="position: relative; display: flex; align-items: center; gap: 7px; color: #FCD34D; font-size: 13px; font-weight: 600; margin-bottom: 4px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FCD34D" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19"/></svg>صباح الخير</div>
+              <h2 style="position: relative; margin: 0 0 18px; font-size: 27px; font-weight: 700; color: #fff;">كابتن أمير — جاهز ليومك؟</h2>
+              <div style="position: relative; display: flex; gap: 12px;">
+                <div style="background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.24); border-radius: 13px; padding: 12px 18px;"><div style="font-size: 12px; color: rgba(255,255,255,.85);">حصص اليوم</div><div class="num" style="font-size: 24px; font-weight: 700; color: #fff;">3</div></div>
+                <div style="background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.24); border-radius: 13px; padding: 12px 18px;"><div style="font-size: 12px; color: rgba(255,255,255,.85);">حضور متوقَّع</div><div class="num" style="font-size: 24px; font-weight: 700; color: #fff;">58</div></div>
+                <div style="background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.24); border-radius: 13px; padding: 12px 18px;"><div style="font-size: 12px; color: rgba(255,255,255,.85);">محصّل هذا الشهر</div><div class="num" style="font-size: 24px; font-weight: 700; color: #fff;">₪ 18,400</div></div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><span style="font-size: 14px; font-weight: 700; color: #0B1A2E;">جدول اليوم</span><span style="font-size: 12px; color: #2563EB; font-weight: 600;">عرض التقويم</span></div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 14px;"><div style="text-align: center; flex: none;"><div class="num" style="font-size: 17px; font-weight: 700; color: #2563EB;">16:00</div><div style="font-size: 10px; color: #94A3B8;">90 دقيقة</div></div><div style="width: 1px; align-self: stretch; background: #EEF2F6;"></div><div style="flex: 1;"><div style="font-size: 14px; font-weight: 600; color: #0B1A2E;">تدريب — بيت سيفر</div><div style="font-size: 12px; color: #6B7A8D;">الملعب الرئيسي · ٢٢ لاعب</div></div><span style="padding: 4px 11px; border-radius: 999px; background: #E7F8F0; color: #047857; font-size: 11px; font-weight: 700;">جاهز</span></div>
+                  <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 14px;"><div style="text-align: center; flex: none;"><div class="num" style="font-size: 17px; font-weight: 700; color: #2563EB;">18:30</div><div style="font-size: 10px; color: #94A3B8;">90 دقيقة</div></div><div style="width: 1px; align-self: stretch; background: #EEF2F6;"></div><div style="flex: 1;"><div style="font-size: 14px; font-weight: 600; color: #0B1A2E;">مباراة — ليجا</div><div style="font-size: 12px; color: #6B7A8D;">ضد هـ. كفر قاسم</div></div><span style="padding: 4px 11px; border-radius: 999px; background: #FEF3E2; color: #B45309; font-size: 11px; font-weight: 700;">قريبًا</span></div>
+                  <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 14px; display: flex; align-items: center; gap: 14px;"><div style="text-align: center; flex: none;"><div class="num" style="font-size: 17px; font-weight: 700; color: #2563EB;">20:00</div><div style="font-size: 10px; color: #94A3B8;">60 دقيقة</div></div><div style="width: 1px; align-self: stretch; background: #EEF2F6;"></div><div style="flex: 1;"><div style="font-size: 14px; font-weight: 600; color: #0B1A2E;">لياقة — بوجريم</div><div style="font-size: 12px; color: #6B7A8D;">صالة اللياقة</div></div><span style="padding: 4px 11px; border-radius: 999px; background: #F4F7FB; color: #6B7A8D; font-size: 11px; font-weight: 700;">مجدول</span></div>
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 14px; font-weight: 700; color: #0B1A2E; margin-bottom: 12px;">يحتاج انتباهك</div>
+                <div style="background: #FDF2F2; border: 1px solid #F3C9C4; border-radius: 14px; padding: 14px; margin-bottom: 10px;"><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#C0392B" stroke-width="2"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></svg><span style="font-size: 13px; font-weight: 700; color: #0B1A2E;">٧ مستحقات متأخرة</span></div><div class="num" style="font-size: 20px; font-weight: 700; color: #C0392B;">₪ 2,140</div><div style="font-size: 12px; color: #6B7A8D; margin-top: 2px;">اضغط للمتابعة والتذكير</div></div>
+                <div style="background: #fff; border: 1px solid #E3EAF1; border-radius: 14px; padding: 14px;"><div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg><span style="font-size: 13px; font-weight: 700; color: #0B1A2E;">حضور بانتظار الرفع</span></div><div class="num" style="font-size: 20px; font-weight: 700; color: #047857;">٢ حصص</div><div style="font-size: 12px; color: #6B7A8D; margin-top: 2px;">من تدريب الأمس</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
-
-  <!-- BOTTOM NAV (5 tabs, RTL) -->
-  <nav class="absolute bottom-0 inset-x-0 bg-white/95 backdrop-blur border-t border-hairline px-2 pt-2 pb-5 flex justify-around">
-    <a class="flex flex-col items-center gap-1 text-chrome">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>
-      <span class="text-[10px] font-semibold">الرئيسية</span>
-    </a>
-    <a class="flex flex-col items-center gap-1 text-muted2">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
-      <span class="text-[10px]">اللاعبون</span>
-    </a>
-    <a class="flex flex-col items-center gap-1 text-muted2">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      <span class="text-[10px]">التقويم</span>
-    </a>
-    <a class="flex flex-col items-center gap-1 text-muted2">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-      <span class="text-[10px]">المالية</span>
-    </a>
-    <a class="flex flex-col items-center gap-1 text-muted2">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9"/></svg>
-      <span class="text-[10px]">الإدارة</span>
-    </a>
-  </nav>
-</div>
-
-<!-- caption -->
-<div class="max-w-xs text-ink/80 text-sm self-center space-y-2 hidden lg:block">
-  <p class="font-bold text-ink">الرئيسية — الفتح الصباحي</p>
-  <p class="text-muted">أول شاشة يفتحها الكابتن: التحية، المال، ما يحتاج انتباهه، وجدول اليوم.</p>
-  <ul class="text-[13px] text-muted2 list-disc pr-4 space-y-1">
-    <li>أرقام المال بخط Plex Mono (لوحة نتائج).</li>
-    <li>الأخضر للأزرار = ‎#047857‎ (يجتاز AA).</li>
-    <li>الشعار حاضر + يتنفّس.</li>
-    <li>بطاقات اليوم بأسلوب المباريات.</li>
-  </ul>
 </div>
 
 </body>

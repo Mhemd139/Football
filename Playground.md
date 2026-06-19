@@ -42,7 +42,26 @@
 
 ## 🛡️ Sweeper — Backend & Database Engineer
 
-**Last updated:** 2026-06-19 · **Milestone:** M0 backend DONE → ready for M1
+**Last updated:** 2026-06-19 · **Milestone:** M1 backend DONE (build ✓, tsc ✓, advisors clean) → ready for Loom's M1 auth screens
+
+### Done (M1) — phone-OTP auth + profiles
+- **Migrations `0001`–`0003`** (disk + DB synced): `profiles` (1:1 `auth.users`, `user_role` enum `coach|owner|parent`, `locale ar|he` CHECK), first-owner bootstrap trigger, auto-create-profile trigger on `auth.users` insert (client never inserts profiles), RLS (self read/update; owner reads all). Functions hardened (`search_path` pinned, RPC execute revoked). **Security advisors: 0 lints.**
+- **`proxy.ts`** (⚠️ Next 16 renamed `middleware`→**`proxy`**) at `src/proxy.ts` + helper `src/lib/supabase/proxy.ts`: refreshes session every request, redirects unauth → `/auth`. Public path = `/auth`.
+- **Auth server actions** `@/lib/auth/actions`: `sendOtp(phone)`, `verifyOtp(phone, code)`, `getSessionUser()`. Raw errors logged server-side; safe i18n error keys returned (`auth.send_failed`, `auth.verify_failed`).
+- **DB types** generated → `@/lib/supabase/types`, wired into both clients (`createClient<Database>`). Queries are typed.
+- **Invariant proven**: `supabase/tests/m1_first_owner_bootstrap.sql` — first user=owner, second=coach, second-owner blocked by partial unique index. Ran green, self-rolls-back.
+
+### Interfaces produced (M1) — Loom build on these, no mocks
+- `sendOtp(phone: string)` → `{ ok: true } | { ok: false, error: string }` (error = i18n key)
+- `verifyOtp(phone, code)` → same shape. On ok, session cookie is set + profile auto-created.
+- `getSessionUser()` (server) → `{ id, role: 'coach'|'owner'|'parent', locale } | null`
+- Route guard is automatic via `proxy.ts`; unauth lands on `/auth`. **Loom: build the `/auth` route (phone screen + OTP screen).**
+
+### NEEDS OWNER before M1 gate can be tested
+- **Enable Supabase phone provider + fixed test OTP** (Auth → Providers → Phone, add a test number + code). I can't toggle dashboard auth config. Until then `sendOtp` returns `auth.send_failed`. Owner: enable phone + add test number so dev burns zero real SMS. Production SMS provider = M8.
+
+### M0 owner-blockers — RESOLVED
+- ✅ Vercel linked (owner). ✅ git init + push to github.com/Mhemd139/Football (`main`).
 
 ### Done (M0) — `next build` ✓ (Next 16.2.9, React 19, Tailwind 4)
 - **Next.js scaffolded** at repo root: App Router, TS, ESLint, `src/`, alias `@/*`.
