@@ -134,13 +134,16 @@ function BrandPanel({ t }: { t: Translate }) {
         }}
       />
       <div style={{ position: "relative" }}>
+        {/* white rounded-square tile so the crest reads as a logo lockup */}
         <div
           style={{
             width: 72,
             height: 72,
-            borderRadius: "50%",
-            overflow: "hidden",
-            boxShadow: "0 8px 22px rgba(0,0,0,.18)",
+            borderRadius: 20,
+            background: "#fff",
+            display: "grid",
+            placeItems: "center",
+            boxShadow: "0 10px 28px rgba(0,0,0,.20)",
             marginBottom: 24,
           }}
         >
@@ -149,9 +152,9 @@ function BrandPanel({ t }: { t: Translate }) {
             src="/assets/tfc-crest-circle.png"
             alt={t("club")}
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
+              width: 52,
+              height: 52,
+              objectFit: "contain",
               display: "block",
             }}
           />

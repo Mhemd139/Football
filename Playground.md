@@ -42,7 +42,14 @@
 
 ## 🛡️ Sweeper — Backend & Database Engineer
 
-**Last updated:** 2026-06-19 · **Milestone:** ✅ M2 backend DONE → ready for Loom's M2 player screens
+**Last updated:** 2026-06-20 · **Milestone:** ✅ M2 backend DONE · M3 (Events & Attendance) is next — holding for owner go
+
+### Status 2026-06-20 — next up is M3, Home is M5 (clarified for Atlas/Loom)
+
+- M0 ✅ · M1 ✅ (gate passed, real phone) · M2 ✅ (build/tsc/RLS proven). Nothing new merged since M2.
+- **Next backend milestone = M3 Events & Attendance** (the North Star, offline-safe). Not started — holding for owner go.
+- **Home screen = M5, not earlier (owner asked).** Home is a pure aggregator (greeting + today's sessions + needs-attention); it has no data to show until events (M3) + dues/salaries (M4) exist (plan.md:411). Backend contract `getHomeData()` lands at M5. **Loom can build the Home shell against mock shapes earlier, but the real data contract is 2 milestones out (M3→M4→M5).**
+
 
 ### M2 backend DONE — players + categories (build ✓, tsc ✓, RLS proven) 2026-06-19
 - **Migration `0004`** `players` table: `id`, `category` enum `beet_sefer|league|bogrim`, `full_name` (required), `national_id`, `birthdate`, `jersey_number`, `position`, `height_cm`, `guardian_name`, `guardian_phone`, `active` (soft-delete), timestamps. Index `(category, active)`.
@@ -156,7 +163,38 @@ The app is live at **https://football-smoky-one.vercel.app** (stable Vercel prod
 
 ## 🧵 Loom — UI / Design Engineer
 
-**Last updated:** 2026-06-19 (late) · **Milestone:** M1 `/auth` built + responsive; touched Sweeper's players action (security)
+**Last updated:** 2026-06-20 · **Milestone:** M2 player screens DONE + screenshot-verified + edit/deactivate wired
+
+### ✅ M2 player screens — DONE, no mocks, visually verified at 375px + 1440px
+Built from design §06/§07, wired to `@/lib/players/actions`. Routes (cookie-locale, no `[locale]` seg):
+- **`/players`** — 3 category cards (static, no DB call): بيت سيفر / ليجا / بوجريم + descs + pays/club-pays badge + Bogrim note.
+- **`/players/[category]`** — `roster.tsx` (client): server-fetched `listPlayers` → search filter, player rows (avatar · name · position·#jersey), **empty** (bobbing real ball.png), **error** (retry), **FAB** → form sheet.
+- **`/players/[category]/[id]`** — profile: blue hero (avatar+jersey badge+name+category pill+position) + **edit/إزالة actions** + identity meta strip + **3 deferred panels**.
+- **`player-form-sheet.tsx`** (client) — ONE sheet for add AND edit: `createPlayer` / `updatePlayer`. Add = category fixed by route; edit = fields pre-filled. Numbers parsed safely (empty→null, NaN→null — no `Number('')===0`).
+- **`profile-actions.tsx`** (client) — edit (reopens the sheet pre-filled) + **deactivate confirm modal**: `deactivatePlayer`, copy states **access revoked but history (attendance/payments) preserved & not deleted** → on success routes back to roster.
+- Next 16: `params` is a Promise → `await params`; category validated vs `Constants.public.Enums.player_category`, invalid → `notFound()`.
+
+### Owner-requested fixes applied this pass (all done)
+1. **Screenshot gate** — drove test login (`0587131002`/`123456` ← it's 6 digits, not 4), seeded 4 real players via the add flow, captured all routes ×2 viewports + add/edit/deactivate states. Caught + fixed: (a) `.num` was wrapping whole values so "١٦ سنة"/"١٧٠ سم" rendered mono-LTR — now only the **number** is `.num`, the Arabic unit stays RTL; (b) desktop profile was sparse → 2-col body + deferred panels fill it.
+2. **Finance dot** — confirmed: roster renders **NO dues dot/legend** (the design's green/amber/red dot needs M4 dues data). No false "paid". Same no-mocks principle as the §07 panels.
+3. **edit + deactivate** — wired (see above).
+4. **Deferred §07 panels** kept as **labeled "تظهر هنا عند توفّر بياناتها" placeholders** (الأداء/الحضور/المالية), dashed cards — layout slot already reads right for M3-M5, NOT deleted, NOT mocked.
+
+### 🛡️ Sweeper / Atlas — i18n: full `players.*` catalog (AR + HE, 84 keys, parity verified 84/84)
+Your 4 error keys + all UI/form/identity/deactivate copy. Arabic grounded in design §06/§07; **Hebrew is parity — STILL flagged for owner/native review, NOT finalized** (per Atlas's HE convention). Atlas owns final copy; keys are stable. Added `tfc-bob` keyframe + reduced-motion guard to `globals.css`.
+
+### Decisions (owner-confirmed)
+1. **Profile = M2 identity slice, real data.** §07 analytics deferred (M3/M4/M5/M7 tables don't exist) → labeled placeholders, not mocked.
+2. **Bogrim = BLUE not purple** (Atlas #5). 3 cards distinguished by badge+label+tile-tint (`#EAF0FB`/`#E7F8F0`/`#DCE9FF`), not a 3rd hue.
+
+### ⏭️ Note
+- Verified: tsc ✓, eslint ✓, AR/HE parity 84/84, screenshots reviewed. Not yet committed/pushed (owner drives commits). Screenshots were ephemeral (temp dir, cleaned).
+
+---
+
+## 🧵 Loom — earlier (M1 auth)
+
+**Milestone:** M1 `/auth` built + responsive; touched Sweeper's players action (security)
 
 ### ✅ M1 `/auth` route — BUILT, live-ready (real contracts, no mocks)
 - `src/app/auth/page.tsx` + `auth-flow.tsx` (client) + `src/lib/auth/phone.ts` (E.164 normalizer `05…`→`+9725…`).

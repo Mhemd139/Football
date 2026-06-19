@@ -38,6 +38,23 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
+/* Themed motion (plan §Visual: motion with meaning). */
+@keyframes tfc-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* Money & numeric values: tabular, LTR-isolated inside RTL (plan §Visual). */
 .num {
   font-family: var(--font-mono), ui-monospace, monospace;
@@ -48,10 +65,11 @@ body {
 
 /* ---- /auth responsive shell (design/login.html) ----
    Mobile: full-screen light gradient, form only.
-   Desktop (≥900px): split-screen — branded blue→green panel + form. */
+   Desktop (≥900px): split-screen — form 48% + branded blue→green panel 52%. */
 .auth-shell {
   min-height: 100dvh;
   display: flex;
+  flex-direction: column;
 }
 .auth-brand {
   display: none; /* hidden on mobile */
@@ -61,6 +79,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
   overflow: hidden;
   background: linear-gradient(170deg, #eaf4ff 0%, #ffffff 42%, #e6f7ef 100%);
@@ -70,30 +89,68 @@ body {
   position: relative;
   width: 100%;
   max-width: 380px;
-  margin: 0 auto;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 @media (min-width: 900px) {
+  /* Desktop: a centered, contained split CARD on a soft page — not an
+     edge-to-edge full-viewport bleed (which left huge empty halves). */
+  .auth-shell {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 40px;
+    background: #eef2f6;
+  }
+  .auth-form-pane,
+  .auth-brand {
+    min-height: 0;
+    height: 560px;
+  }
+  .auth-shell > .auth-brand,
+  .auth-shell > .auth-form-pane {
+    flex: 0 0 auto;
+  }
+  /* the two halves sit inside one rounded, shadowed 980px card */
   .auth-form-pane {
+    width: 460px;
     background: #fff;
-    flex: 1;
+    border-radius: 0;
     padding: 56px;
+    box-shadow: -22px 22px 54px rgba(11, 26, 46, 0.12);
+  }
+  .auth-form-inner {
+    margin: auto;
+    max-width: 340px;
+  }
+  .auth-brand {
+    position: relative;
+    width: 520px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    overflow: hidden;
+    padding: 56px;
+    color: #fff;
+    background: linear-gradient(150deg, #2563eb 0%, #1e40af 60%, #10b981 140%);
+    box-shadow: 0 22px 54px rgba(11, 26, 46, 0.16);
+  }
+  /* round the OUTER corners of the whole card (RTL: form is on the right) */
+  .auth-form-pane {
+    border-radius: 0 20px 20px 0;
+  }
+  .auth-brand {
+    border-radius: 20px 0 0 20px;
   }
   /* crest + light circles live in the brand panel on desktop — hide on the
      clean white form side */
   .auth-mobile-crest,
   .auth-mobile-circle {
     display: none !important;
-  }
-  .auth-brand {
-    position: relative;
-    flex: 1.1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    overflow: hidden;
-    padding: 56px;
-    color: #fff;
-    background: linear-gradient(150deg, #2563eb 0%, #1e40af 60%, #10b981 140%);
   }
 }
