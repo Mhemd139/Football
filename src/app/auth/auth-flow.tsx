@@ -54,30 +54,31 @@ export function AuthFlow() {
   );
 }
 
-/* Shared chrome — the login.html card: white phone-frame face on the green→blue
-   page, crest tile, heading, club line, then the step body. */
+/* Shared chrome — the login.html gradient face filling the whole screen, with
+   the decorative circles, content vertically centered (crest, heading, body). */
 function AuthCard({ children }: { children: ReactNode }) {
   return (
     <div
       style={{
+        minHeight: "100dvh",
         background:
           "linear-gradient(170deg, #EAF4FF 0%, #FFFFFF 42%, #E6F7EF 100%)",
-        border: `1px solid ${BORDER}`,
-        borderRadius: 28,
-        padding: "34px 26px 28px",
-        boxShadow: "0 22px 54px rgba(11,26,46,.14)",
         position: "relative",
         overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        padding: "32px 24px calc(32px + env(safe-area-inset-bottom))",
       }}
     >
       <div
         aria-hidden
         style={{
           position: "absolute",
-          right: -50,
-          top: -50,
-          width: 180,
-          height: 180,
+          right: -60,
+          top: -60,
+          width: 220,
+          height: 220,
           border: "2px solid rgba(16,185,129,.16)",
           borderRadius: "50%",
         }}
@@ -86,15 +87,24 @@ function AuthCard({ children }: { children: ReactNode }) {
         aria-hidden
         style={{
           position: "absolute",
-          left: -40,
-          top: 40,
-          width: 120,
-          height: 120,
+          left: -50,
+          top: 60,
+          width: 150,
+          height: 150,
           border: "2px solid rgba(37,99,235,.14)",
           borderRadius: "50%",
         }}
       />
-      <div style={{ position: "relative" }}>{children}</div>
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 380,
+          margin: "0 auto",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }
