@@ -26,9 +26,9 @@ function ageFrom(birthdate: string | null): number | null {
 export default async function PlayerProfilePage({
   params,
 }: {
-  params: Promise<{ category: string; id: string }>;
+  params: Promise<{ category: string; teamId: string; id: string }>;
 }) {
-  const { category, id } = await params;
+  const { category, teamId, id } = await params;
   if (!isCategory(category)) notFound();
 
   const t = await getTranslations("players");
@@ -51,36 +51,27 @@ export default async function PlayerProfilePage({
 
   return (
     <main className="mx-auto w-full max-w-4xl pb-10" dir="rtl">
-      {/* hero */}
-      <div
-        className="relative overflow-hidden px-6 pb-6 pt-8 text-white"
-        style={{ background: "linear-gradient(120deg, #2563EB 0%, #1E40AF 70%)" }}
-      >
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-50"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(90deg, transparent 0 58px, rgba(255,255,255,.06) 58px 60px)",
-          }}
-        />
+      {/* hero — Navy-Pitch band (shared kit; stripes + centre-circle ride in
+          via ::before/::after, gradient mirrors under dir=rtl so titles sit
+          over the dark navy stop) */}
+      <div className="pitch-band pitch-band--hero px-6 pb-6 pt-8">
         <div className="relative mb-4 flex items-center justify-between">
           <Link
-            href={`/players/${category}`}
+            href={`/players/${category}/${teamId}`}
             aria-label={t("back")}
-            className="grid h-9 w-9 place-items-center rounded-full bg-white/20"
+            className="grid h-11 w-11 place-items-center rounded-full bg-white/[0.16] ring-1 ring-white/[0.28] backdrop-blur-sm"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" aria-hidden="true">
               <path d="M9 6l6 6-6 6" />
             </svg>
           </Link>
-          <ProfileActions category={category} player={p} />
+          <ProfileActions category={category} teamId={teamId} player={p} />
         </div>
         <div className="relative flex items-center gap-4">
-          <div className="relative grid h-[68px] w-[68px] flex-none place-items-center rounded-full border-2 border-white/55 bg-white/20 text-2xl font-bold">
+          <div className="pitch-pop pitch-tile relative h-[68px] w-[68px] flex-none rounded-full text-2xl font-bold">
             {p.full_name.trim().charAt(0)}
             {p.jersey_number != null && (
-              <span className="num absolute -bottom-1 -right-1 grid h-6 w-6 place-items-center rounded-full border-2 border-[#2563EB] bg-white text-[11px] text-[#2563EB]">
+              <span className="num absolute -bottom-1 -end-1 grid h-6 w-6 place-items-center rounded-full border-2 border-[#2563EB] bg-white text-[11px] text-[#2563EB]">
                 {p.jersey_number}
               </span>
             )}
@@ -93,7 +84,7 @@ export default async function PlayerProfilePage({
               </span>
             </div>
             {p.position && (
-              <div className="mt-1 text-[13px] text-white/85">{p.position}</div>
+              <div className="mt-1 text-[13px] text-white">{p.position}</div>
             )}
           </div>
         </div>
@@ -108,7 +99,7 @@ export default async function PlayerProfilePage({
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-2">
             {meta.map((m) => (
               <div key={m.label} className="rounded-xl bg-[#F4F7FB] px-3 py-2.5">
-                <div className="mb-0.5 text-[10px] font-semibold text-[#94A3B8]">
+                <div className="mb-0.5 text-[10px] font-semibold text-[#5E6E80]">
                   {m.label}
                 </div>
                 <div className="text-sm font-bold text-[#0B1A2E]">
@@ -146,7 +137,7 @@ function DeferredPanel({ title, hint }: { title: string; hint: string }) {
         </span>
         <span className="text-[13px] font-bold text-[#51637A]">{title}</span>
       </div>
-      <p className="text-[11.5px] text-[#94A3B8]">{hint}</p>
+      <p className="text-[11.5px] text-[#5E6E80]">{hint}</p>
     </div>
   );
 }

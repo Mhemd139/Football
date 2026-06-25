@@ -48,10 +48,35 @@ body {
     transform: translateY(-6px);
   }
 }
+
+/* Skeleton shimmer (design §00 .skl) — for route loaders + lazy lists. */
+@keyframes tfc-shimmer {
+  from {
+    background-position: 220% 0;
+  }
+  to {
+    background-position: -220% 0;
+  }
+}
+.skl {
+  background: linear-gradient(100deg, #e3eaf1 30%, #f2f6fa 50%, #e3eaf1 70%);
+  background-size: 220% 100%;
+  animation: tfc-shimmer 1.4s linear infinite;
+  border-radius: 10px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
+  }
+  .skl {
+    animation: none;
+  }
+  /* The global 0.001ms rule still honors animation-delay, leaving the crest
+     tile invisible for 160ms. Kill the pop outright so it renders instantly. */
+  .pitch-pop {
+    animation: none;
   }
 }
 
@@ -61,6 +86,242 @@ body {
   font-variant-numeric: tabular-nums lining-nums;
   unicode-bidi: isolate;
   direction: ltr;
+}
+
+/* ============================================================
+   PITCH KIT — ONE club, ONE pitch. The Bogrim band promoted to
+   shared classes so every header/hero reads as the same club.
+   ONE 122deg axis, RTL-mirrored, three living variants:
+   --home  : the alive green→blue band (emerald glow → deep blue) —
+             the app's signature, matching the canonical design.
+   --hero  : deep navy identity centrepiece (Bogrim hero, Profile).
+   --header: a calmer navy for chrome-adjacent bands.
+   Each carries pitch-stripes + a centre-circle ghost via ::before/
+   ::after (no extra DOM). White text AA-verified ≥4.5:1 on every stop.
+   ============================================================ */
+
+/* The band itself + its two decoration layers (stripes + centre-circle)
+   ride along as pseudo-elements, so applying the class to a Loom-owned
+   <header> needs NO extra DOM nodes. */
+.pitch-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+}
+.pitch-band--hero {
+  background:
+    radial-gradient(120% 140% at 88% 8%, rgba(96, 165, 250, 0.45) 0%, transparent 46%),
+    linear-gradient(122deg, #1b3a9e 0%, #2563eb 60%, #2d6bf0 100%);
+}
+.pitch-band--header {
+  background:
+    radial-gradient(120% 150% at 88% 6%, rgba(96, 165, 250, 0.34) 0%, transparent 50%),
+    linear-gradient(122deg, #16327f 0%, #1f50c0 62%, #2563eb 100%);
+}
+/* --home: the alive green→blue band (design reference). A bright emerald glow
+   on the start side warms into deep blue — energetic, not flat. */
+.pitch-band--home {
+  background:
+    radial-gradient(120% 130% at 12% 0%, rgba(52, 211, 153, 0.55) 0%, transparent 52%),
+    linear-gradient(122deg, #10b981 0%, #1d8fcf 52%, #2563eb 100%);
+}
+
+/* RTL MIRROR (mandatory — Arabic primary). CSS gradients are physical
+   backgrounds: they do NOT flip under dir="rtl". Titles/crest sit on the
+   RTL start (right), so we mirror the angle (360-122=238) and move the
+   light blob to the opposite corner — the DARK navy stop then lands under
+   the text. This is what makes the AA ratios true (e.g. white on #1B3A9E
+   = 9.79:1) instead of white over the lit #2563EB end (~4.2:1, fails). */
+[dir="rtl"] .pitch-band--hero {
+  background:
+    radial-gradient(120% 140% at 12% 8%, rgba(96, 165, 250, 0.45) 0%, transparent 46%),
+    linear-gradient(238deg, #1b3a9e 0%, #2563eb 60%, #2d6bf0 100%);
+}
+[dir="rtl"] .pitch-band--header {
+  background:
+    radial-gradient(120% 150% at 12% 6%, rgba(96, 165, 250, 0.34) 0%, transparent 50%),
+    linear-gradient(238deg, #16327f 0%, #1f50c0 62%, #2563eb 100%);
+}
+
+/* (1) mowing stripes — ONE spec everywhere: 44/45px @ .14. */
+.pitch-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1; /* under content; .pitch-band has isolation so this is local */
+  pointer-events: none;
+  opacity: 0.14;
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0 44px,
+    rgba(255, 255, 255, 0.9) 44px 45px
+  );
+}
+/* (2) centre-circle ghost — logical start corner so it mirrors in RTL. */
+.pitch-band::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  bottom: -46px;
+  inset-inline-start: -34px;
+  width: 160px;
+  height: 160px;
+  opacity: 0.13;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 4px, transparent 5px),
+    radial-gradient(circle at 50% 50%, transparent 0 70px, #fff 70px 72px, transparent 73px);
+}
+
+/* The glass identity tile (CrestTile) on a navy band — verbatim Bogrim.
+   Size is set per-context with width/height utilities. */
+.pitch-tile {
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* StatTile ring for numbers-on-gradient (Home) — a crisper glass edge than
+   the near-invisible white/20 border. Cosmetic ring, not an AA boundary. */
+.stat-glass {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+.stat-glass--muted {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+/* Width guard for tabular counts at header size — 3+ digit roster counts
+   must not shove the RTL title. Pair with .num. */
+.num-count {
+  max-width: 4ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The ONE crest/tile entrance pop, CSS-only so it works inside Server
+   Components (Home/Profile) with no client island. Rests at scale(1) so
+   reduced-motion (which kills the animation) leaves the tile full size. */
+@keyframes tfc-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.pitch-pop {
+  animation: tfc-pop 0.42s cubic-bezier(0.32, 0.72, 0, 1) 0.16s both;
+}
+
+/* ============================================================
+   ALIVE-CARD DEPTH KIT — the light-theme premium layer.
+   The bands made the gradients feel alive; this makes the WHITE
+   screen bodies feel alive too. Depth in light mode = a disciplined
+   tinted-shadow scale (one light direction, from above) + the
+   "floodlit tile" signature. No page glow, no dark — stays
+   sunlight-legible + AA. Research-backed (light-mode depth = shadow
+   system, not darkness).
+   ============================================================ */
+
+/* (1) Tinted shadow tiers — ink-tinted, never pure black, light from
+   above. lift-2 = resting card; lift-3 = focal/hover. The accent
+   variants let an action card cast a faint GREEN shadow + a chrome
+   card a faint BLUE one — the single biggest "expensive" tell. */
+:root {
+  --lift-1: 0 1px 2px rgba(11, 26, 46, 0.04), 0 1px 1px rgba(11, 26, 46, 0.03);
+  --lift-2: 0 6px 16px rgba(11, 26, 46, 0.06), 0 2px 5px rgba(11, 26, 46, 0.04);
+  --lift-3: 0 14px 30px rgba(11, 26, 46, 0.1), 0 4px 10px rgba(11, 26, 46, 0.05);
+  --lift-green: 0 8px 22px rgba(16, 135, 120, 0.2);
+  --lift-blue: 0 8px 22px rgba(37, 99, 235, 0.18);
+}
+
+/* (2) The alive card — a real surface, not a hairline row. Rests on
+   lift-2; on hover it rises to lift-3 and floats up 2px; on tap it
+   presses in. The ring is a near-invisible edge so the card reads as
+   a discrete object even on the #F4F7FB page. */
+.alive-card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: var(--lift-2);
+  box-shadow: var(--lift-2), inset 0 0 0 1px rgba(11, 26, 46, 0.05);
+  transition:
+    transform 0.22s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@media (hover: hover) {
+  .alive-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--lift-3), inset 0 0 0 1px rgba(11, 26, 46, 0.06);
+  }
+}
+.alive-card:active {
+  transform: scale(0.99);
+}
+
+/* (3) THE SIGNATURE — the floodlit tile. A gradient squircle lit from
+   above: an inset top-edge highlight (the floodlight rim) + a faint
+   COLORED shadow cast onto the card below (as if lit from stadium
+   lights). Literal to football, and the one memorable through-line
+   that makes every screen read as one lit club. Two leans: green
+   (people/action) + blue (chrome/match). */
+.floodlit {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -6px 14px rgba(11, 26, 46, 0.18);
+}
+.floodlit--green {
+  background: linear-gradient(150deg, #34d399 0%, #10b981 45%, #047857 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -6px 14px rgba(4, 80, 60, 0.28),
+    var(--lift-green);
+}
+.floodlit--blue {
+  background: linear-gradient(150deg, #60a5fa 0%, #2563eb 48%, #1e40af 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -6px 14px rgba(15, 35, 90, 0.28),
+    var(--lift-blue);
+}
+/* gold is too light for white at the top stop — darken the ramp so white
+   numerals clear AA across the whole tile (white on #B45309 = 4.6:1). */
+.floodlit--gold {
+  background: linear-gradient(150deg, #f59e0b 0%, #d97706 44%, #92400e 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -6px 14px rgba(80, 40, 4, 0.32),
+    0 8px 22px rgba(180, 83, 9, 0.24);
+}
+.floodlit--red {
+  background: linear-gradient(150deg, #f87171 0%, #ef4444 46%, #b91c1c 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -6px 14px rgba(110, 20, 20, 0.3),
+    0 8px 22px rgba(192, 57, 43, 0.22);
+}
+/* the floodlight beam — a soft top sheen riding over the gradient */
+.floodlit::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at 50% -20%, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
 }
 
 /* ---- /auth responsive shell (design/login.html) ----
@@ -137,8 +398,47 @@ body {
     overflow: hidden;
     padding: 56px;
     color: #fff;
-    background: linear-gradient(150deg, #2563eb 0%, #1e40af 60%, #10b981 140%);
+    /* Navy-Pitch axis — same family as every in-app band. Removes the old
+       mint overshoot (white text fell to 2.54:1 over the #10B981 stop). */
+    background:
+      radial-gradient(120% 150% at 88% 6%, rgba(96, 165, 250, 0.34) 0%, transparent 50%),
+      linear-gradient(122deg, #16327f 0%, #1e40af 55%, #2563eb 100%);
     box-shadow: 0 22px 54px rgba(11, 26, 46, 0.16);
+  }
+  /* same pitch motif as .pitch-band, drawn as pseudo-elements (the brand
+     panel draws its own crest via .auth-mobile-crest nodes, not pseudos). */
+  .auth-brand::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.14;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent 0 44px,
+      rgba(255, 255, 255, 0.9) 44px 45px
+    );
+  }
+  .auth-brand::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    bottom: -46px;
+    inset-inline-start: -34px;
+    width: 160px;
+    height: 160px;
+    opacity: 0.13;
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle at 50% 50%, #fff 0 4px, transparent 5px),
+      radial-gradient(circle at 50% 50%, transparent 0 70px, #fff 70px 72px, transparent 73px);
+  }
+  /* keep real brand content above the motif layers */
+  .auth-brand > * {
+    position: relative;
+    z-index: 1;
   }
   /* round the OUTER corners of the whole card (RTL: form is on the right) */
   .auth-form-pane {

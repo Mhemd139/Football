@@ -3,18 +3,21 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Tables, TablesInsert, Enums } from "@/lib/supabase/types";
 
-// The columns we actually select (COLUMNS) — timestamps omitted, the UI doesn't use them.
+// Selected columns only (COLUMNS) — timestamps omitted, the UI doesn't use them.
 export type Player = Omit<Tables<"players">, "created_at" | "updated_at">;
+export type Team = Omit<Tables<"teams">, "created_at" | "updated_at">;
 export type Category = Enums<"player_category">;
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
-const COLUMNS =
-  "id, category, full_name, national_id, birthdate, jersey_number, position, height_cm, guardian_name, guardian_phone, active";
+const PLAYER_COLUMNS =
+  "id, team_id, full_name, national_id, birthdate, jersey_number, position, height_cm, guardian_name, guardian_phone, monthly_salary, active";
+const TEAM_COLUMNS = "id, category, name, active";
 
-// Fields a coach may set/edit. Server owns id/active/timestamps.
+// Fields a coach may set/edit on a player. Server owns id/active/timestamps;
+// the team (and therefore the category) is set by which roster you're in.
 type PlayerInput = {
-  category: Category;
+  team_id: string;
   full_name: string;
   national_id?: string | null;
   birthdate?: string | null;
@@ -25,12 +28,73 @@ type PlayerInput = {
   guardian_phone?: string | null;
 };
 
-export async function listPlayers(category: Category): Promise<Result<Player[]>> {
+// ── Teams ──────────────────────────────────────────────────────────────
+
+export async function listTeams(category: Category): Promise<Result<Team[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("teams")
+    .select(TEAM_COLUMNS)
+    .eq("category", category)
+    .eq("active", true)
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("listTeams failed:", error);
+    return { ok: false, error: "teams.load_failed" };
+  }
+  return { ok: true, data };
+}
+
+export async function createTeam(
+  category: Category,
+  name: string,
+): Promise<Result<Team>> {
+  const clean = name.trim();
+  if (!clean) return { ok: false, error: "teams.invalid_input" };
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("teams")
+    .insert({ category, name: clean })
+    .select(TEAM_COLUMNS)
+    .single();
+
+  if (error) {
+    console.error("createTeam failed:", error);
+    return { ok: false, error: "teams.save_failed" };
+  }
+  return { ok: true, data };
+}
+
+// Active-player count per team in a category — for the teams-list screen.
+export async function teamPlayerCounts(
+  category: Category,
+): Promise<Result<Record<string, number>>> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("players")
-    .select(COLUMNS)
-    .eq("category", category)
+    .select("team_id, teams!inner(category)")
+    .eq("active", true)
+    .eq("teams.category", category);
+
+  if (error) {
+    console.error("teamPlayerCounts failed:", error);
+    return { ok: false, error: "players.load_failed" };
+  }
+  const counts: Record<string, number> = {};
+  for (const row of data) counts[row.team_id] = (counts[row.team_id] ?? 0) + 1;
+  return { ok: true, data: counts };
+}
+
+// ── Players ────────────────────────────────────────────────────────────
+
+export async function listPlayers(teamId: string): Promise<Result<Player[]>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("players")
+    .select(PLAYER_COLUMNS)
+    .eq("team_id", teamId)
     .eq("active", true)
     .order("jersey_number", { ascending: true, nullsFirst: false })
     .order("full_name", { ascending: true });
@@ -46,7 +110,7 @@ export async function getPlayer(id: string): Promise<Result<Player>> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("players")
-    .select(COLUMNS)
+    .select(PLAYER_COLUMNS)
     .eq("id", id)
     .single();
 
@@ -65,7 +129,7 @@ export async function createPlayer(input: PlayerInput): Promise<Result<Player>> 
   const { data, error } = await supabase
     .from("players")
     .insert(clean)
-    .select(COLUMNS)
+    .select(PLAYER_COLUMNS)
     .single();
 
   if (error) {
@@ -81,8 +145,12 @@ export async function updatePlayer(
 ): Promise<Result<Player>> {
   // Allow-list the patch: server actions are reachable by direct POST, and the
   // Partial<PlayerInput> type is erased at runtime. Never let a caller write
-  // id/active/timestamps or an invalid category (the dues-vs-salary split is
-  // load-bearing). Mirrors createPlayer's sanitize step.
+  // id/active/timestamps — and NOT team_id: moving a player to a team in a
+  // different category would silently flip their money direction (dues<->salary),
+  // and the FK can't catch that (a wrong-category team is still a valid team).
+  // Team is set once at createPlayer (by the roster you entered); edit can't
+  // re-pick it. A same-category transfer, if ever needed, is an explicit feature
+  // that must compare categories before writing. Mirrors createPlayer's sanitize.
   const clean = sanitizePatch(patch);
   if (clean === null || Object.keys(clean).length === 0) {
     return { ok: false, error: "players.invalid_input" };
@@ -93,7 +161,7 @@ export async function updatePlayer(
     .from("players")
     .update(clean)
     .eq("id", id)
-    .select(COLUMNS)
+    .select(PLAYER_COLUMNS)
     .single();
 
   if (error) {
@@ -118,17 +186,17 @@ export async function deactivatePlayer(id: string): Promise<Result<null>> {
   return { ok: true, data: null };
 }
 
-// Validate at the boundary: name required, category valid, numbers are numbers.
+// Validate at the boundary: name + team required, numbers are numbers.
 function sanitize(input: PlayerInput): TablesInsert<"players"> | null {
   const full_name = input.full_name?.trim();
-  if (!full_name) return null;
-  if (!["beet_sefer", "league", "bogrim"].includes(input.category)) return null;
+  const team_id = input.team_id?.trim();
+  if (!full_name || !team_id) return null;
 
   const num = (v: number | null | undefined) =>
     v == null || Number.isNaN(v) ? null : v;
 
   return {
-    category: input.category,
+    team_id,
     full_name,
     national_id: input.national_id?.trim() || null,
     birthdate: input.birthdate || null,
@@ -141,7 +209,7 @@ function sanitize(input: PlayerInput): TablesInsert<"players"> | null {
 }
 
 // Allow-list an update patch to the editable fields only. Returns null on an
-// invalid value (bad category, blanked-out required name); {} means nothing
+// invalid value (empty team_id, blanked-out required name); {} means nothing
 // editable was supplied. id/active/timestamps can never be set here.
 function sanitizePatch(
   p: Partial<PlayerInput>,
@@ -150,10 +218,7 @@ function sanitizePatch(
   const num = (v: number | null | undefined) =>
     v == null || Number.isNaN(v) ? null : v;
 
-  if (p.category !== undefined) {
-    if (!["beet_sefer", "league", "bogrim"].includes(p.category)) return null;
-    out.category = p.category;
-  }
+  // team_id is intentionally NOT editable here — see the function comment.
   if (p.full_name !== undefined) {
     const name = p.full_name?.trim();
     if (!name) return null; // required field — cannot be blanked
