@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TFC — Players (Pitch beautification preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #EEF2F6; -webkit-font-smoothing: antialiased;
+    font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: #0B1A2E;
+    min-height: 100vh; display: grid; place-items: center; padding: 40px;
+  }
+  .num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums lining-nums; unicode-bidi: isolate; direction: ltr; }
+  @keyframes up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+  .rise { animation: up .5s cubic-bezier(.32,.72,0,1) both; }
+
+  /* phone frame (matches source device mock) */
+  .phone { width: 320px; background: #0B1A2E; border-radius: 44px; padding: 9px; box-shadow: 0 26px 60px rgba(11,26,46,.22); }
+  .screen { background: #F4F7FB; border-radius: 36px; overflow: hidden; }
+  .scroll { padding: 28px 18px 18px; }
+
+  h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  .sub { margin: 6px 0 0; font-size: 13px; color: #5E6E80; }
+  .dot { color: #C2CDD9; margin: 0 6px; }
+
+  .board { display: flex; flex-direction: column; gap: 14px; margin-top: 22px; }
+
+  /* Bogrim hero */
+  .hero {
+    position: relative; isolation: isolate; overflow: hidden; border-radius: 24px;
+    display: block; padding: 18px; color: #fff; text-decoration: none;
+    background:
+      radial-gradient(120% 140% at 88% 8%, rgba(96,165,250,.45) 0%, transparent 46%),
+      linear-gradient(122deg, #1B3A9E 0%, #2563EB 60%, #2D6BF0 100%);
+    box-shadow: 0 14px 30px rgba(30,64,175,.28);
+  }
+  .hero .stripes { position: absolute; inset: 0; opacity: .14; pointer-events: none;
+    background-image: repeating-linear-gradient(90deg, transparent 0 44px, rgba(255,255,255,.9) 44px 45px); }
+  .hero .circle { position: absolute; bottom: -46px; left: -34px; opacity: .13; pointer-events: none; }
+  /* top row: crest + name/desc on the right (RTL start), big count on the left */
+  .hero .head { position: relative; display: flex; align-items: center; gap: 14px; }
+  .crest { position: relative; width: 54px; height: 54px; flex: none; display: grid; place-items: center;
+    border-radius: 16px; background: rgba(255,255,255,.16); box-shadow: inset 0 0 0 1px rgba(255,255,255,.28);
+    backdrop-filter: blur(4px); animation: pop .5s cubic-bezier(.32,.72,0,1) .18s both; }
+  .crest img { width: 36px; height: 36px; object-fit: contain; }
+  .hero .body { position: relative; flex: 1; min-width: 0; }
+  .hero h2 { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.05; }
+  .hero .desc { margin: 3px 0 0; font-size: 12.5px; color: rgba(255,255,255,.88); }
+  .hero .count { position: relative; flex: none; text-align: left; }
+  .hero .count .big { font-size: 38px; font-weight: 700; line-height: .9; letter-spacing: -.02em; }
+  .hero .count .unit { font-size: 10.5px; font-weight: 500; color: rgba(255,255,255,.7); }
+  /* bottom row: the salaried badge sits alone on its own line, never wraps into the title */
+  .hero .foot { position: relative; margin-top: 16px; display: flex; align-items: center; gap: 8px; }
+  .pill-light { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px;
+    background: rgba(255,255,255,.16); padding: 5px 11px; font-size: 11px; font-weight: 700; white-space: nowrap;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.22); }
+  .pill-light svg { width: 13px; height: 13px; }
+  .hero .enter { margin-inline-start: auto; opacity: .65; }
+
+  /* youth pair — accent-edge language: leading edge + crest-tile + ghost motif,
+     white body, secondary typography (held below the hero) */
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .kid { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px; height: 100%;
+    border-radius: 20px; border: 1px solid #E3EAF1; background: #fff; padding: 16px; text-decoration: none;
+    box-shadow: 0 2px 8px rgba(11,26,46,.05); transition: border-color .2s, box-shadow .2s; }
+  .kid .edge { position: absolute; inset-block: 0; inset-inline-start: 0; width: 3px; }
+  .kid .motif { position: absolute; bottom: -20px; inset-inline-end: -16px; opacity: .05; pointer-events: none; }
+  .kid.blue:hover { border-color: #C7D7F0; box-shadow: 0 10px 28px rgba(37,99,235,.12); }
+  .kid.green:hover { border-color: #B6E3CE; box-shadow: 0 10px 28px rgba(16,185,129,.12); }
+  .kid .top { position: relative; display: flex; align-items: center; justify-content: space-between; }
+  .kid .tile { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: 12px; }
+  .kid .countwrap { display: flex; align-items: baseline; gap: 3px; }
+  .kid .big { font-size: 23px; font-weight: 700; line-height: 1; letter-spacing: -.02em; color: #0B1A2E; }
+  .kid .countwrap .u { font-size: 10px; font-weight: 600; color: #5E6E80; }
+  .kid h3 { position: relative; margin: 0; font-size: 15.5px; font-weight: 700; color: #0B1A2E; letter-spacing: -.01em; }
+  .kid .desc { position: relative; margin: 3px 0 0; font-size: 11.5px; line-height: 1.4; color: #5E6E80; }
+  .pill-dues { position: relative; margin-top: auto; width: fit-content; display: inline-flex; align-items: center;
+    border-radius: 999px; padding: 2px 10px; font-size: 10px; font-weight: 700; background: #E7F8F0; color: #047857; }
+
+  .note { margin: 20px 0 0; border-inline-start: 2px solid #DCE9FF; padding-inline-start: 14px;
+    font-size: 11.5px; line-height: 1.6; color: #5E6E80; }
+
+  .caption { font-size: 12px; color: #51637A; margin-bottom: 12px; text-align: center; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="caption">الجوال · اللاعبون (Pitch beautification)</div>
+    <div class="phone">
+      <div class="screen">
+        <div class="scroll">
+          <div class="rise" style="animation-delay:0s">
+            <h1>اللاعبون</h1>
+            <p class="sub"><span class="num">64</span> لاعبًا في النادي<span class="dot">·</span>3 فئات</p>
+          </div>
+
+          <div class="board">
+            <!-- Bogrim hero -->
+            <a class="hero rise" style="animation-delay:.04s" href="#">
+              <div class="stripes"></div>
+              <svg class="circle" width="160" height="160" viewBox="0 0 150 150" fill="none">
+                <circle cx="75" cy="75" r="54" stroke="#fff" stroke-width="2"/>
+                <circle cx="75" cy="75" r="6" fill="#fff"/>
+              </svg>
+              <div class="head">
+                <span class="crest"><img src="assets/tfc-crest-circle.png" alt=""></span>
+                <div class="body">
+                  <h2>بوجريم</h2>
+                  <p class="desc">كبار · فريق النادي</p>
+                </div>
+                <div class="count">
+                  <div class="num big">16</div>
+                  <div class="unit">لاعبًا</div>
+                </div>
+              </div>
+              <div class="foot">
+                <span class="pill-light">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                  النادي يدفع له
+                </span>
+                <svg class="enter" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+              </div>
+            </a>
+
+            <!-- youth pair -->
+            <div class="pair">
+              <a class="kid blue rise" style="animation-delay:.1s" href="#">
+                <span class="edge" style="background:#2563EB"></span>
+                <svg class="motif" width="84" height="84" viewBox="0 0 150 150" fill="none"><circle cx="75" cy="75" r="54" stroke="#2563EB" stroke-width="2.5"/></svg>
+                <div class="top">
+                  <span class="tile" style="background:#E8F0FD;box-shadow:inset 0 0 0 1px #D3E1F7">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E50C8" stroke-width="1.7"><path d="M8 3l-5 3 1.5 4L7 9v11h10V9l2.5 1L21 6l-5-3-2 2a3 3 0 01-4 0L8 3z"/></svg>
+                  </span>
+                  <span class="countwrap"><span class="num big">26</span><span class="u">لاعبًا</span></span>
+                </div>
+                <div>
+                  <h3>بيت سيفر</h3>
+                  <p class="desc">مدرسة كرة القدم · مبتدئون</p>
+                </div>
+                <span class="pill-dues">يدفع اشتراكًا</span>
+              </a>
+
+              <a class="kid green rise" style="animation-delay:.16s" href="#">
+                <span class="edge" style="background:#10B981"></span>
+                <svg class="motif" width="84" height="84" viewBox="0 0 150 150" fill="none"><circle cx="75" cy="75" r="54" stroke="#10B981" stroke-width="2.5"/></svg>
+                <div class="top">
+                  <span class="tile" style="background:#E3F5EC;box-shadow:inset 0 0 0 1px #C8ECD9">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="1.7"><path d="M8 3l-5 3 1.5 4L7 9v11h10V9l2.5 1L21 6l-5-3-2 2a3 3 0 01-4 0L8 3z"/></svg>
+                  </span>
+                  <span class="countwrap"><span class="num big">22</span><span class="u">لاعبًا</span></span>
+                </div>
+                <div>
+                  <h3>ليجا</h3>
+                  <p class="desc">منافسات · يتقنون اللعب</p>
+                </div>
+                <span class="pill-dues">يدفع اشتراكًا</span>
+              </a>
+            </div>
+          </div>
+
+          <p class="note">بوجريم لاعبون محترفون — تُدار رواتبهم من شاشة المالية.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

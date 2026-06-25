@@ -41,3 +41,12 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# local screenshot scratch (not committed)
+.tmp-shots/
+
+# agent tooling (local, not project source)
+/graphify-out/
+/.agents/
+/.claude/
+/skills-lock.json

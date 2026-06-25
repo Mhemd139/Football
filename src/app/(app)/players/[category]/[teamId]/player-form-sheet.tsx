@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import {
   createPlayer,
   updatePlayer,
-  type Category,
   type Player,
 } from "@/lib/players/actions";
+import { BottomSheet, useReducedMotion } from "@/components/motion/primitives";
+import { SuccessCheck } from "@/components/motion/success-check";
 
 // Parse a numeric text field safely: empty → null, non-numeric → null.
 // (Number('') is 0 and Number('x') is NaN — both would corrupt the row.)
@@ -19,25 +20,45 @@ function toNumOrNull(raw: string): number | null {
 }
 
 // Add (player undefined) or edit (player given, fields pre-filled) a player.
+// The team is fixed by the roster you entered from — no second pick.
 export function PlayerFormSheet({
-  category,
+  teamId,
+  teamName,
   player,
   onClose,
   onSaved,
 }: {
-  category: Category;
+  teamId: string;
+  teamName: string;
   player?: Player;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const t = useTranslations("players");
+  const reduce = useReducedMotion();
   const isEdit = !!player;
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+  const doneTimer = useRef<number | undefined>(undefined);
+
+  // Clear the success-beat timer if the sheet unmounts mid-beat.
+  useEffect(() => () => window.clearTimeout(doneTimer.current), []);
+
+  // Lock the background page while the sheet is open, so scroll gestures move the
+  // sheet's own content, not the roster behind it. (Escape + focus trapping are
+  // owned by BottomSheet's focus trap.)
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   const title = isEdit
     ? t("form_edit_title")
-    : t("form_add_title", { category: t(`category_${category}`) });
+    : t("form_add_to_team", { team: teamName });
 
   function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -63,33 +84,39 @@ export function PlayerFormSheet({
     startTransition(async () => {
       const res = isEdit
         ? await updatePlayer(player.id, fields)
-        : await createPlayer({ category, ...fields });
+        : await createPlayer({ team_id: teamId, ...fields });
       if (!res.ok) {
         setError(t(res.error));
         return;
       }
-      onSaved();
+      // Show the success beat, then hand back to the caller (close + refresh).
+      // Reduced motion gets a shorter beat — still confirms, doesn't dwell.
+      setSaved(true);
+      doneTimer.current = window.setTimeout(onSaved, reduce ? 450 : 850);
     });
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col justify-end"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-    >
-      <button
-        type="button"
-        aria-label={t("cancel")}
-        onClick={onClose}
-        className="absolute inset-0 bg-[#0B1A2E]/45"
-      />
+    <BottomSheet onClose={onClose} label={title}>
       <div
         dir="rtl"
-        className="relative mx-auto max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-[26px] bg-white px-6 pb-7 pt-2.5"
+        className="mx-auto max-h-[88dvh] w-full max-w-md overflow-y-auto rounded-t-[26px] bg-white px-6 pb-7 pt-2.5"
       >
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-[#D5DEE8]" />
+
+        {saved ? (
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex flex-col items-center justify-center gap-3.5 px-6 py-12 text-center"
+          >
+            <SuccessCheck size={64} />
+            <p className="text-base font-bold text-[#0B1A2E]">
+              {isEdit ? t("saved_updated") : t("saved_added")}
+            </p>
+          </div>
+        ) : (
+          <>
         <h2 className="mb-5 text-[17px] font-bold text-[#0B1A2E]">{title}</h2>
 
         <form onSubmit={submit} noValidate className="flex flex-col gap-3.5">
@@ -179,8 +206,10 @@ export function PlayerFormSheet({
             </button>
           </div>
         </form>
+          </>
+        )}
       </div>
-    </div>
+    </BottomSheet>
   );
 }
 
@@ -207,6 +236,7 @@ function Field({
     <label className="block">
       <span className="mb-1.5 block text-xs font-semibold text-[#51637A]">
         {label}
+        {required && <span className="text-[var(--color-chrome)]"> *</span>}
       </span>
       <input
         name={name}

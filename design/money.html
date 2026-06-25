@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TFC — Money / المالية (M4 preview)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     TFC MONEY — M4, clickable prototype.
+     plan.md:457-465 (Loom M4) + Sweeper's @/lib/money/actions contracts.
+     Money screens stay STRICTLY CLEAN (product-context:104) — calm chrome,
+     NOT the energetic green DNA. Status = color + LABEL (never color alone).
+     Record-payment = 2-tap happy path (Atlas regression alarm, plan.md:468):
+     amount pre-filled to remaining + cash default → confirm. Zero typing.
+     Entry-point (tap-row A vs button-pick B) is ATLAS'S call — this preview
+     ships A (the truest 2-tap) and keeps B reachable via the FAB so his
+     ruling drops onto whichever. Wires to recordPayment({dueId,amount,method,
+     clientId}) + listDues/listSalaries + generateDues/generateSalaries.
+     ============================================================ */
+  * { box-sizing: border-box; }
+  :root {
+    --ink: #0B1A2E; --muted: #5E6E80; --line: #E3EAF1; --screen: #F4F7FB;
+    --paid: #047857; --paid-bg: #E7F8F0; --paid-ring: #10B981;
+    --partial: #B45309; --partial-bg: #FEF3E2; --partial-ring: #F59E0B;
+    --overdue: #C0392B; --overdue-bg: #FDECEA; --overdue-ring: #EF4444;
+    --upcoming: #2563EB; --upcoming-bg: #EAF0FB; --upcoming-ring: #60A5FA;
+    --action: #047857;
+  }
+  body {
+    margin: 0; background: #EEF2F6; -webkit-font-smoothing: antialiased;
+    font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; color: var(--ink);
+    min-height: 100vh; display: grid; place-items: start center; padding: 40px 20px;
+  }
+  .num { font-family: 'IBM Plex Mono', monospace; font-variant-numeric: tabular-nums lining-nums; unicode-bidi: isolate; direction: ltr; }
+  .caption { font-size: 12px; color: #51637A; margin: 0 0 14px; text-align: center; max-width: 360px; }
+  .caption b { color: var(--ink); }
+
+  @keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pop { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: scale(1); } }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes ringDraw { from { stroke-dashoffset: 169; } to { stroke-dashoffset: 0; } }
+  @keyframes tickDraw { from { stroke-dashoffset: 40; } to { stroke-dashoffset: 0; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* phone frame (matches the design device mock + attendance preview) */
+  .phone { position: relative; width: 340px; background: #0B1A2E; border-radius: 46px; padding: 9px;
+    box-shadow: 0 26px 60px rgba(11,26,46,.22); }
+  .screen { position: relative; height: 720px; background: var(--screen); border-radius: 37px; overflow: hidden;
+    display: flex; flex-direction: column; }
+
+  /* ---------- header — CALM money chrome (deep ink, not the green DNA band) ---------- */
+  .head { position: relative; isolation: isolate; overflow: hidden; color: #fff; padding: 20px 18px 0;
+    background: linear-gradient(160deg, #0E2647 0%, #14315E 100%); }
+  .head .top { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .head h1 { margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -.01em; }
+  .head .back { width: 36px; height: 36px; flex: none; display: grid; place-items: center; border-radius: 12px;
+    background: rgba(255,255,255,.14); border: none; cursor: pointer; }
+  /* month total summary */
+  .summary { position: relative; margin-top: 16px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+  .summary .big { font-size: 13px; color: rgba(255,255,255,.72); }
+  .summary .big .amt { display: block; font-size: 27px; font-weight: 700; margin-top: 2px; }
+  .summary .big .amt .cur { font-size: 14px; font-weight: 600; opacity: .7; margin-inline-start: 3px; }
+  .summary .period { font-size: 11.5px; color: rgba(255,255,255,.78); background: rgba(255,255,255,.12);
+    border-radius: 999px; padding: 5px 11px; white-space: nowrap; }
+
+  /* sub-tabs (Dues / Salaries) */
+  .tabs { position: relative; margin-top: 18px; display: flex; gap: 4px; }
+  .tab { flex: 1; padding: 11px 6px; text-align: center; cursor: pointer; border: none; background: none;
+    font-family: inherit; font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,.6);
+    border-bottom: 2.5px solid transparent; transition: color .15s, border-color .15s; }
+  .tab.on { color: #fff; border-bottom-color: #fff; }
+  .tab .sub { display: block; font-size: 9.5px; font-weight: 600; opacity: .65; margin-top: 2px; }
+
+  /* ---------- toolbar: filter + generate ---------- */
+  .toolbar { display: flex; align-items: center; gap: 8px; padding: 12px 16px 6px; }
+  .filters { display: flex; gap: 6px; flex: 1; overflow-x: auto; }
+  .filters::-webkit-scrollbar { height: 0; }
+  .fchip { font-family: inherit; font-size: 11.5px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    border-radius: 999px; padding: 6px 11px; border: 1px solid var(--line); background: #fff; color: #51637A; transition: all .14s; }
+  .fchip.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .gen { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+    border-radius: 999px; border: 1px solid var(--paid-bg); background: var(--paid-bg); color: var(--paid);
+    font-family: inherit; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: transform .12s; }
+  .gen:active { transform: scale(.96); }
+
+  /* ---------- list ---------- */
+  .list { flex: 1; overflow-y: auto; padding: 6px 16px 90px; display: flex; flex-direction: column; gap: 8px; }
+  .list::-webkit-scrollbar { width: 0; }
+
+  .prow { display: flex; align-items: center; gap: 11px; background: #fff; border: 1px solid var(--line);
+    border-radius: 16px; padding: 11px 12px; cursor: pointer; transition: border-color .18s, box-shadow .18s, transform .12s; }
+  .prow.rise { animation: up .4s cubic-bezier(.32,.72,0,1) both; }
+  .prow:active { transform: scale(.99); }
+  .prow:hover { border-color: #CBD7E3; box-shadow: 0 4px 14px rgba(11,26,46,.06); }
+  .av { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 12px;
+    background: var(--screen); font-size: 15px; font-weight: 700; color: #51637A; }
+  .who { flex: 1; min-width: 0; }
+  .who .nm { font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+  .who .due { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  /* status pill = color + LABEL (never color alone) */
+  .stat { flex: none; display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700;
+    border-radius: 999px; padding: 4px 9px; }
+  .pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .pill.paid { background: var(--paid-bg); color: var(--paid); } .pill.paid .dot { background: var(--paid-ring); }
+  .pill.partial { background: var(--partial-bg); color: var(--partial); } .pill.partial .dot { background: var(--partial-ring); }
+  .pill.overdue { background: var(--overdue-bg); color: var(--overdue); } .pill.overdue .dot { background: var(--overdue-ring); }
+  .pill.upcoming { background: var(--upcoming-bg); color: var(--upcoming); } .pill.upcoming .dot { background: var(--upcoming-ring); }
+  .stat .bal { font-size: 12.5px; font-weight: 700; }
+  .stat .bal .lbl { font-size: 9px; font-weight: 600; color: var(--muted); margin-inline-end: 3px; }
+  .prow[data-paid] .stat .bal { color: var(--paid); }
+  .prow[data-over] .stat .bal { color: var(--overdue); }
+
+  /* salaries: "no salary set" honest skip row */
+  .prow.noset { border-style: dashed; }
+  .prow.noset .av { color: #B0BCC9; }
+  .prow.noset .who .nm { color: #51637A; }
+
+  /* empty / no-rows-yet state */
+  .empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
+  .empty .ball { width: 60px; height: 60px; border-radius: 50%; background:
+    radial-gradient(circle at 35% 30%, #fff, #E3EAF1 70%); border: 1px solid var(--line);
+    display: grid; place-items: center; margin-bottom: 14px; animation: bob 2.4s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  .empty h3 { margin: 0 0 5px; font-size: 15px; font-weight: 700; }
+  .empty p { margin: 0 0 16px; font-size: 12px; color: var(--muted); max-width: 220px; }
+  .empty .gen { height: 40px; padding: 0 18px; font-size: 13px; }
+
+  /* ---------- record-payment sheet ---------- */
+  .scrim { position: absolute; inset: 0; background: rgba(11,26,46,.42); opacity: 0; pointer-events: none;
+    transition: opacity .22s; z-index: 20; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .sheet { position: absolute; inset-inline: 0; bottom: 0; z-index: 21; background: #fff;
+    border-radius: 22px 22px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+    transform: translateY(100%); }
+  .sheet.show { animation: sheetUp .32s cubic-bezier(.32,.72,0,1) forwards; }
+  .grab { width: 38px; height: 4px; border-radius: 99px; background: #DDE5EC; margin: 0 auto 14px; }
+  .sheet .sh-head { display: flex; align-items: center; gap: 11px; margin-bottom: 4px; }
+  .sheet .sh-av { width: 42px; height: 42px; flex: none; display: grid; place-items: center; border-radius: 12px;
+    background: var(--screen); font-size: 15px; font-weight: 700; color: #51637A; }
+  .sheet h3 { margin: 0; font-size: 16px; font-weight: 700; }
+  .sheet .who2 { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  /* amount: pre-filled to remaining, big + mono. Tapping reveals editor (rare path). */
+  .amt-block { margin-top: 16px; background: var(--screen); border: 1px solid var(--line); border-radius: 16px; padding: 14px; text-align: center; }
+  .amt-block .lbl2 { font-size: 11px; font-weight: 600; color: var(--muted); }
+  .amt-block .val { font-size: 34px; font-weight: 700; margin-top: 4px; }
+  .amt-block .val .cur { font-size: 16px; font-weight: 600; color: var(--muted); margin-inline-start: 4px; }
+  .amt-block .edit { margin-top: 8px; font-size: 11px; color: var(--upcoming); background: none; border: none;
+    font-family: inherit; font-weight: 600; cursor: pointer; }
+  .amt-input { display: none; margin-top: 8px; width: 140px; text-align: center; font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px; font-weight: 700; border: 1.5px solid var(--upcoming-ring); border-radius: 12px; padding: 6px 10px;
+    color: var(--ink); }
+  .amt-block.editing .val, .amt-block.editing .edit { display: none; }
+  .amt-block.editing .amt-input { display: inline-block; }
+  /* method: cash default, transfer optional — 2 chips */
+  .fl { font-size: 11.5px; font-weight: 600; color: var(--muted); margin: 14px 2px 7px; }
+  .methods { display: flex; gap: 8px; }
+  .mchip { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 13px; padding: 11px;
+    border: 1.5px solid var(--line); background: #fff; color: #51637A; transition: all .14s; }
+  .mchip.sel { background: var(--paid-bg); border-color: var(--paid-ring); color: var(--paid); }
+  .sheet .confirm { margin-top: 16px; width: 100%; height: 52px; border: none; border-radius: 16px; cursor: pointer;
+    background: var(--action); color: #fff; font-family: inherit; font-size: 15px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+    box-shadow: 0 8px 20px rgba(4,120,87,.28); transition: transform .12s; }
+  .sheet .confirm:active { transform: scale(.98); }
+  .sheet .cancel { margin-top: 9px; width: 100%; text-align: center; background: none; border: none; cursor: pointer;
+    font-family: inherit; font-size: 12px; color: var(--muted); }
+  .offline-toggle { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 7px; font-size: 11px; color: var(--muted); }
+  .offline-toggle button { font-family: inherit; font-size: 11px; font-weight: 600; cursor: pointer;
+    border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 3px 10px; color: var(--ink); }
+  .offline-toggle button.on { background: var(--partial-bg); border-color: #F6DCB0; color: var(--partial); }
+
+  /* ---------- success overlay ---------- */
+  .success { position: absolute; inset: 0; z-index: 30; background: linear-gradient(170deg, #ECFBF3 0%, #F4F8FF 100%);
+    display: none; flex-direction: column; align-items: center; justify-content: center; padding: 32px; text-align: center; }
+  .success.show { display: flex; animation: fadeIn .2s; }
+  .succ-ring { width: 96px; height: 96px; }
+  .succ-ring circle { fill: none; stroke: var(--paid-ring); stroke-width: 5; stroke-linecap: round;
+    stroke-dasharray: 169; stroke-dashoffset: 169; transform: rotate(-90deg); transform-origin: center; }
+  .success.show .succ-ring circle { animation: ringDraw .5s cubic-bezier(.32,.72,0,1) forwards; }
+  .succ-tick { position: absolute; }
+  .succ-tick path { fill: none; stroke: #fff; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 40; stroke-dashoffset: 40; }
+  .success.show .succ-tick path { animation: tickDraw .32s cubic-bezier(.32,.72,0,1) .32s forwards; }
+  .succ-circle-wrap { position: relative; display: grid; place-items: center; }
+  .succ-circle-wrap .fillcircle { position: absolute; width: 78px; height: 78px; border-radius: 50%;
+    background: var(--paid-ring); opacity: 0; transform: scale(.6); }
+  .success.show .fillcircle { animation: pop .4s cubic-bezier(.32,.72,0,1) .12s forwards; }
+  .success h2 { margin: 22px 0 4px; font-size: 21px; font-weight: 700; }
+  .success .ev { font-size: 12.5px; color: var(--muted); }
+  .succ-sync { margin-top: 10px; display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px;
+    font-weight: 600; color: var(--partial); background: var(--partial-bg); border-radius: 999px; padding: 5px 12px; }
+  .succ-sync[hidden] { display: none; }
+  .succ-bal { margin-top: 22px; display: flex; gap: 9px; }
+  .sb { min-width: 78px; border-radius: 14px; padding: 11px 8px; text-align: center; background: #fff; border: 1px solid var(--line); }
+  .sb .n { font-size: 18px; font-weight: 700; }
+  .sb.remain .n { color: var(--overdue); } .sb.paid2 .n { color: var(--paid); }
+  .sb.remain.zero .n { color: var(--paid); }
+  .sb .l2 { font-size: 10px; font-weight: 600; margin-top: 3px; color: var(--muted); }
+  .success .done { margin-top: 26px; width: 100%; max-width: 220px; height: 48px; border: none; border-radius: 14px;
+    background: var(--ink); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; }
+    .scrim { transition: none; } .sheet.show { transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <p class="caption"><b>المالية — M4 preview.</b> Dues / Salaries sub-tabs · status = color + label · <b>2-tap payment</b> (tap a row → amount pre-filled to remaining <em>editable</em>, cash default → confirm). Toggle offline to prove the save feels identical. Entry = tap-the-row (<b>Atlas ruling 2026-06-25</b>; the free-form "pick a player" path was ruled out — it fails the 2-tap alarm).</p>
+
+  <div class="phone">
+    <div class="screen" id="screen">
+
+      <!-- header -->
+      <header class="head">
+        <div class="top">
+          <h1>المالية</h1>
+          <button class="back" aria-label="رجوع">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+        </div>
+        <div class="summary">
+          <div class="big" id="sumLabel">المستحقّ هذا الشهر
+            <span class="amt"><span class="num" id="sumAmt">0</span><span class="cur">₪</span></span>
+          </div>
+          <span class="period">يوليو <span class="num">2026</span></span>
+        </div>
+        <div class="tabs">
+          <button class="tab on" id="tabDues" data-tab="dues">المستحقّات<span class="sub">براعم · ليجا</span></button>
+          <button class="tab" id="tabSal" data-tab="salaries">الرواتب<span class="sub">بوجريم</span></button>
+        </div>
+      </header>
+
+      <!-- toolbar -->
+      <div class="toolbar" id="toolbar">
+        <div class="filters" id="filters"></div>
+        <button class="gen" id="genBtn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+          توليد الشهر
+        </button>
+      </div>
+
+      <!-- list -->
+      <div class="list" id="list"></div>
+
+      <!-- scrim + sheet -->
+      <div class="scrim" id="scrim"></div>
+      <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="تسجيل دفعة">
+        <div class="grab"></div>
+
+        <!-- payment form (entry = tap-the-row, Atlas ruling 2026-06-25) -->
+        <div id="payMode">
+          <div class="sh-head">
+            <div class="sh-av" id="pAv">أ</div>
+            <div>
+              <h3 id="pName">—</h3>
+              <div class="who2" id="pWho">—</div>
+            </div>
+          </div>
+
+          <div class="amt-block" id="amtBlock">
+            <div class="lbl2">المبلغ — المتبقّي</div>
+            <div class="val"><span class="num" id="amtVal">0</span><span class="cur">₪</span></div>
+            <button class="edit" id="amtEdit">تعديل المبلغ</button>
+            <input class="amt-input num" id="amtInput" type="number" inputmode="numeric" min="0" step="1">
+          </div>
+
+          <div class="fl">طريقة الدفع</div>
+          <div class="methods">
+            <button class="mchip sel" id="mCash">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></svg>
+              نقدًا
+            </button>
+            <button class="mchip" id="mTransfer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16M14 6l6 6-6 6"/></svg>
+              تحويل
+            </button>
+          </div>
+
+          <button class="confirm" id="confirmBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></svg>
+            تأكيد الدفع <span class="num" id="confirmAmt">0</span> ₪
+          </button>
+          <div class="offline-toggle">
+            <span>محاكاة الشبكة:</span>
+            <button id="netBtn">متصل</button>
+          </div>
+          <button class="cancel" id="payCancel">إلغاء</button>
+        </div>
+      </div>
+
+      <!-- success -->
+      <div class="success" id="success">
+        <div class="succ-circle-wrap">
+          <div class="fillcircle"></div>
+          <svg class="succ-ring" viewBox="0 0 60 60"><circle cx="30" cy="30" r="27"/></svg>
+          <svg class="succ-tick" width="96" height="96" viewBox="0 0 60 60"><path d="M20 31l7 7 14-15"/></svg>
+        </div>
+        <h2 id="succTitle">تم التسجيل</h2>
+        <p class="ev" id="succWho">—</p>
+        <div class="succ-sync" id="succSync" hidden>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 11-3-6.7M21 3v6h-6"/></svg>
+          محفوظ — سيُزامَن عند عودة الشبكة
+        </div>
+        <div class="succ-bal">
+          <div class="sb paid2"><div class="n num" id="sbPaid">0</div><div class="l2">المدفوع</div></div>
+          <div class="sb remain" id="sbRemainWrap"><div class="n num" id="sbRemain">0</div><div class="l2">المتبقّي</div></div>
+        </div>
+        <button class="done" id="doneBtn">تم</button>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+  // ---- seed data (preview-local; mirrors listDues/listSalaries row shape) ----
+  const DUES = [
+    { id:'d1', name:'يوسف خالد', jersey:7,  amount:150, paid:150, status:'paid' },
+    { id:'d2', name:'آدم ناصر',  jersey:10, amount:150, paid:50,  status:'partial' },
+    { id:'d3', name:'سامي حسن',  jersey:4,  amount:150, paid:0,   status:'overdue' },
+    { id:'d4', name:'ليث عمر',   jersey:11, amount:150, paid:0,   status:'upcoming' },
+    { id:'d5', name:'كريم وليد', jersey:9,  amount:150, paid:0,   status:'overdue' },
+    { id:'d6', name:'نور إياد',  jersey:3,  amount:150, paid:100, status:'partial' },
+  ];
+  const SALARIES = [
+    { id:'s1', name:'أمير صالح',  jersey:8,  amount:3500, paid:0,    status:'upcoming' },
+    { id:'s2', name:'تامر فؤاد',  jersey:6,  amount:3000, paid:3000, status:'paid' },
+    { id:'s3', name:'باسل راضي',  jersey:5,  amount:null, paid:0,    status:'noset' },  // no salary set → honest skip
+  ];
+  const STATUS_LABEL = { paid:'مدفوع', partial:'جزئي', overdue:'متأخّر', upcoming:'قادم', noset:'بلا راتب' };
+
+  // ---- state ----
+  let tab = 'dues';          // 'dues' | 'salaries'
+  let filter = 'all';        // all | paid | partial | overdue | upcoming
+  let online = true;
+  let current = null;        // the row being paid
+  let method = 'cash';
+
+  const $ = (id) => document.getElementById(id);
+  // Western numerals even in the Arabic UI — the club reads 3500, not ٣٥٠٠ (owner, region).
+  // Keep thousands grouping so every amount formats identically.
+  const ar = (n) => Number(n).toLocaleString('en-US');
+  const rows = () => tab === 'dues' ? DUES : SALARIES;
+  const remaining = (r) => Math.max(0, (r.amount || 0) - r.paid);
+
+  // ---- render list ----
+  const FILTERS = [
+    { k:'all', l:'الكل' }, { k:'overdue', l:'متأخّر' }, { k:'partial', l:'جزئي' },
+    { k:'upcoming', l:'قادم' }, { k:'paid', l:'مدفوع' },
+  ];
+  function renderFilters() {
+    $('filters').innerHTML = FILTERS.map(f =>
+      `<button class="fchip ${filter===f.k?'on':''}" data-f="${f.k}">${f.l}</button>`).join('');
+    $('filters').querySelectorAll('.fchip').forEach(b =>
+      b.onclick = () => { filter = b.dataset.f; renderFilters(); renderList(); });
+  }
+
+  function renderSummary() {
+    const list = rows();
+    const owed = list.reduce((s,r) => s + remaining(r), 0);
+    $('sumAmt').textContent = ar(owed);
+    $('sumLabel').firstChild.textContent = tab==='dues' ? 'المستحقّ هذا الشهر ' : 'إجمالي الرواتب ';
+  }
+
+  function renderList() {
+    const list = rows().filter(r => filter==='all' ? true : r.status===filter);
+    const host = $('list');
+    if (!list.length) {
+      host.innerHTML = `<div class="empty">
+        <div class="ball">⚽</div>
+        <h3>لا ${tab==='dues'?'مستحقّات':'رواتب'} بعد</h3>
+        <p>ولّد رواتب هذا الشهر لتظهر هنا، ثم سجّل الدفعات.</p>
+        <button class="gen" id="emptyGen"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg> توليد الشهر</button>
+      </div>`;
+      const eg = $('emptyGen'); if (eg) eg.onclick = onGenerate;
+      return;
+    }
+    host.innerHTML = list.map(r => {
+      const rem = remaining(r);
+      const noset = r.status === 'noset';
+      const initials = r.name.trim()[0];
+      const st = noset ? 'noset' : r.status;
+      const balLine = noset
+        ? `<span class="lbl">—</span>`
+        : (rem === 0
+            ? `<span class="lbl">مدفوع بالكامل</span>`
+            : `<span class="lbl">المتبقّي</span><span class="num">${ar(rem)}</span> ₪`);
+      return `<div class="prow rise" data-id="${r.id}" ${rem===0&&!noset?'data-paid':''} ${r.status==='overdue'?'data-over':''}>
+        <div class="av">${initials}</div>
+        <div class="who">
+          <div class="nm">${r.name}</div>
+          <div class="due">${noset ? 'لم يُحدَّد راتب — تخطٍّ' : `القيمة <span class="num">${ar(r.amount)}</span> ₪ · رقم <span class="num">${ar(r.jersey)}</span>`}</div>
+        </div>
+        <div class="stat">
+          <span class="pill ${st}"><span class="dot"></span>${STATUS_LABEL[st]}</span>
+          <span class="bal">${balLine}</span>
+        </div>
+      </div>`;
+    }).join('');
+    // entry A: tap a row → sheet for that player (skip noset rows)
+    host.querySelectorAll('.prow').forEach(el => {
+      el.onclick = () => {
+        const r = rows().find(x => x.id === el.dataset.id);
+        if (!r || r.status === 'noset' || remaining(r) === 0) return;  // already paid / no salary → no-op
+        openPayment(r);
+      };
+    });
+  }
+
+  // ---- tabs ----
+  function setTab(t) {
+    tab = t; filter = 'all';
+    $('tabDues').classList.toggle('on', t==='dues');
+    $('tabSal').classList.toggle('on', t==='salaries');
+    renderFilters(); renderSummary(); renderList();
+  }
+  $('tabDues').onclick = () => setTab('dues');
+  $('tabSal').onclick = () => setTab('salaries');
+
+  // ---- generate ----
+  function onGenerate() {
+    // preview: pretend the month's rows just got created (they're already seeded);
+    // wires to generateDues(period)/generateSalaries(period) — idempotent.
+    const created = rows().filter(r => r.status !== 'noset').length;
+    const skipped = rows().filter(r => r.status === 'noset').length;
+    $('genBtn').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#047857" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></svg> ${ar(created)} ${skipped?`· تخطّى ${ar(skipped)}`:''}`;
+    renderList();
+  }
+  $('genBtn').onclick = onGenerate;
+
+  // ---- payment sheet ----
+  function openPayment(r) {
+    current = r; method = 'cash';
+    $('pAv').textContent = r.name.trim()[0];
+    $('pName').textContent = r.name;
+    $('pWho').textContent = (tab==='dues' ? 'مستحقّات' : 'راتب') + ' · يوليو 2026';
+    const rem = remaining(r);
+    $('amtVal').textContent = ar(rem);
+    $('amtInput').value = rem;
+    $('confirmAmt').textContent = ar(rem);
+    $('amtBlock').classList.remove('editing');
+    selectMethod('cash');
+    $('netBtn').classList.toggle('on', !online);
+    $('netBtn').textContent = online ? 'متصل' : 'غير متصل';
+    showSheet();
+  }
+  function showSheet() { $('scrim').classList.add('show'); $('sheet').classList.add('show'); }
+  function hideSheet() { $('scrim').classList.remove('show'); $('sheet').classList.remove('show'); }
+
+  $('payCancel').onclick = hideSheet;
+  $('scrim').onclick = hideSheet;
+
+  function selectMethod(m) {
+    method = m;
+    $('mCash').classList.toggle('sel', m==='cash');
+    $('mTransfer').classList.toggle('sel', m==='transfer');
+  }
+  $('mCash').onclick = () => selectMethod('cash');
+  $('mTransfer').onclick = () => selectMethod('transfer');
+
+  // amount editor (rare path — common case never touches it)
+  $('amtEdit').onclick = () => { $('amtBlock').classList.add('editing'); $('amtInput').focus(); };
+  $('amtInput').oninput = () => {
+    const v = Math.max(0, Number($('amtInput').value) || 0);
+    $('confirmAmt').textContent = ar(v);
+  };
+
+  // net toggle
+  $('netBtn').onclick = () => {
+    online = !online;
+    $('netBtn').classList.toggle('on', !online);
+    $('netBtn').textContent = online ? 'متصل' : 'غير متصل';
+  };
+
+  // confirm → recordPayment({ dueId, amount, method, clientId })
+  $('confirmBtn').onclick = () => {
+    const editing = $('amtBlock').classList.contains('editing');
+    const amount = editing ? Math.max(0, Number($('amtInput').value)||0) : remaining(current);
+    if (amount <= 0) return;
+    // optimistic local apply (server is idempotent on clientId)
+    current.paid += amount;
+    const rem = remaining(current);
+    current.status = rem === 0 ? 'paid' : (current.paid > 0 ? 'partial' : current.status);
+    hideSheet();
+    showSuccess(amount, rem);
+  };
+
+  function showSuccess(amount, rem) {
+    $('succWho').textContent = current.name + ' · ' + (method==='cash'?'نقدًا':'تحويل');
+    $('sbPaid').textContent = ar(current.paid);
+    $('sbRemain').textContent = ar(rem);
+    $('sbRemainWrap').classList.toggle('zero', rem === 0);
+    $('succSync').hidden = online;            // honest offline line, hidden online
+    $('succTitle').textContent = online ? 'تم التسجيل' : 'محفوظ محليًا';
+    $('success').classList.add('show');
+  }
+  $('doneBtn').onclick = () => {
+    $('success').classList.remove('show');
+    renderSummary(); renderList();
+  };
+
+  // ---- init ----
+  renderFilters(); renderSummary(); renderList();
+</script>
+</body>
+</html>

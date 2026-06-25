@@ -31,9 +31,23 @@ that prove the data invariants hold.** Enforces invariants at the database, not 
 in doubt, the DB says no.
 
 ### 🧵 Loom — UI / Design Engineer
-Weaves intent into interface. Owns: the design system (tokens, type, motion), every screen and
-component, RTL layout, shadcn/ui composition, accessibility of the rendered UI, loading/empty/
-success states, the feel. Builds the no-think surface the coach touches pitch-side.
+Weaves intent into interface. Owns: the design system (tokens, type scale), every screen and
+component, RTL layout, shadcn/ui composition, and the **still structure** of loading/empty/success
+states. Builds the no-think surface the coach touches pitch-side. **Hands the finished structure to
+Pitch for motion + the accessibility pass.**
+
+### 🎬 Pitch — Motion & Polish / Accessibility Engineer
+Named for the pitch-lines and the field where it all has to feel alive and read in sunlight. Owns:
+the **motion system** (themed loaders — spinning ball, rolling pitch-lines; breathing crest;
+animated success checks; bobbing-ball empty states), all transitions and micro-interactions,
+`prefers-reduced-motion`, and the **accessibility verification pass** (WCAG AA contrast, ≥ 44px
+targets, one-handed reach, sunlight readability). **Does not invent the design system or build
+screen logic — that's Loom.** Pitch takes Loom's shipped structure and makes it feel finished and
+provably accessible.
+- **Equipped skill:** invoke **`web-animation-design`** before any motion work.
+- **Level:** senior interaction/motion engineer. Bar = *motion with meaning* — if an animation
+  doesn't communicate state or guide attention, it doesn't ship. 60fps, GPU-friendly,
+  reduced-motion-safe; WCAG AA is non-negotiable.
 
 ### 🧭 Atlas — Product Manager & UX
 Holds the map. Owns: scope, priority, the JTBD, acceptance criteria, copy (AR/HE), defaults,
@@ -45,13 +59,19 @@ decisions; Sweeper has final say on data integrity; Loom has final say on intera
 conflicts escalate to Atlas.**
 
 ### Collaboration protocol
-- **Handoff direction per milestone:** Sweeper lands the data + contracts → Loom builds on the
-  real contracts (never mocks that drift) → Atlas runs the acceptance checklist → Human Test Gate.
+- **Handoff direction per milestone:** Sweeper lands the data + contracts → Loom builds the screen
+  structure on the real contracts → **Pitch layers motion + runs the accessibility pass** → Atlas
+  runs the acceptance checklist → Human Test Gate.
 - **Amendments:** If Atlas changes a requirement mid-milestone, Atlas appends a dated
   `> PM AMENDMENT:` line to the affected task and notifies the owning agent. The agent reworks
   only that task; gates already passed are not reopened unless the amendment touches them.
 - **Contracts are shared truth:** every server action / table / type Sweeper produces is listed
   in that milestone's **Interfaces** block. Loom consumes exactly those names — no guessing.
+- **Loom vs Pitch (the split):** Loom owns tokens, layout, screen structure/logic, and skeletons
+  (the *still frame*). Pitch owns loaders, success/empty animations, all motion + reduced-motion,
+  and the WCAG AA / sunlight / one-handed audit (the *living, accessible frame*). **Any animation,
+  loader, motion, or accessibility task in any milestone is Pitch's — even where it's printed
+  under Loom.**
 
 ---
 
@@ -72,9 +92,18 @@ Locked with the owner 2026-06-19, plus the auth decision Atlas made for this pla
     use). This is how we keep SMS spend near zero.
   - **Dev/test:** use a fixed test OTP (Supabase test phone numbers) during the build so we burn
     **zero real SMS** until production.
-- **Players:** **ONE `players` table.** `category` enum = `beet_sefer | league | bogrim` drives
-  **money direction only**. Bogrim (adults/senior team) take attendance like everyone, but the
-  **club pays them** (salaries) — they never appear in dues.
+- **Players & teams:** **`category → team → player`.** A `teams` table carries the
+  `category` enum (`beet_sefer | league | bogrim`); each team has a **free-text name** typed by the
+  coach (no imposed age scheme). A player links to **exactly one team** via `players.team_id`;
+  **category is derived through the team**, not stored on the player. The category still drives
+  **money direction only** — Bogrim teams are salaried (club pays them, never in dues); Beet
+  Sefer / League teams pay dues. **The team is the working unit:** events, attendance, and dues
+  hang off `team_id`. The dues-vs-salary invariant is unchanged — it now resolves `player → team
+  → category`.
+  > PM AMENDMENT 2026-06-20 (Atlas, owner-directed): original spec said "ONE `players` table,
+  > `category` enum on the player." Owner corrected the domain — categories contain teams, teams
+  > contain players. Category moved to `teams.category`; `players.category` dropped; `players.team_id`
+  > added. Invariant preserved. Lands as M3-prep (see M2/M3); M2 screens gain one nav level, not a rewrite.
 - **Money:** **TWO tables, never one signed-amount table.** `dues` + `payments` for
   beet_sefer + league only; `salaries` for bogrim only. Direction is reversed, so tables are
   separate (avoids the 3am sign bug). Enforce with CHECK + RLS: a Bogrim can never land in dues,
@@ -200,12 +229,22 @@ the token CSS variables (`--color-action`, `--color-chrome`, `--color-ink`, mone
       `#10B981`, surface `#FFFFFF`, ink `#0B1A2E`; money + attendance semantic colors; type scale.
 - [ ] Build the **device-adaptive app shell**: mobile bottom nav with 5 tabs
       **Home · Players · Calendar · Money · Admin**; desktop side/top nav, same routes.
-- [ ] Build the shared **loading skeleton** + a **themed loader** (spinning ball / rolling
-      pitch-lines) and a generic **empty state** (bobbing ball). Wire `prefers-reduced-motion`.
+- [ ] Build the shared **loading skeleton** and the **static shells** for empty states (the still
+      structure). *(The themed loader, the empty-state animation, and `prefers-reduced-motion` are
+      Pitch's — see below.)*
 - [ ] RTL layout primitives: a `<Money>` component that renders Plex Mono, tabular, LTR-isolated.
 
-**Interfaces produced:** `<AppShell>`, `<TabBar>`, `<Skeleton>`, `<BallLoader>`, `<EmptyState>`,
+**Interfaces produced:** `<AppShell>`, `<TabBar>`, `<Skeleton>`, `<EmptyState>` (static shell),
 `<Money value=… />`.
+
+### 🎬 Pitch
+- [ ] Invoke `web-animation-design`. Build the **themed loader** `<BallLoader>` (spinning ball /
+      rolling pitch-lines) and the **empty-state motion** (bobbing ball) layered on Loom's
+      `<EmptyState>` shell.
+- [ ] Establish the **motion baseline** every later animation inherits: standard easing/durations
+      as tokens, and one global `prefers-reduced-motion` strategy.
+
+**Interfaces produced:** `<BallLoader>`, the motion tokens, the reduced-motion wrapper.
 
 ### 🧭 Atlas
 - [ ] Write the M0 acceptance checklist (below). Confirm the IA map (5 primary tabs, secondary
@@ -272,6 +311,22 @@ Logs out → bounced to `/auth`.
 ## M2 — Players & categories (coach/owner only)
 *Goal: add players across the three categories, browse rosters, open a profile. Get the load-bearing split right: Bogrim ≠ dues, kids ≠ salaries. **Parent access is NOT built here — deferred to M7.***
 
+> PM AMENDMENT 2026-06-20 (Atlas, owner-directed; ultracode-verified): M2's flat `category`-on-player model
+> is superseded by `category → team → player` (see §2). The gate-passed M2 **UX behavior** is NOT reopened,
+> but the engineering blast radius is real and should not be undersold: **one new screen (teams-list) +
+> roster/profile/add-sheet relocated one level deeper + every players action re-signatured**
+> (`listPlayers(teamId)` not `category`, create/update take `team_id`, flat `playerCounts` gone). IA becomes
+> **category → teams-list → team roster → player profile**. The model migration (new `teams` table,
+> `players.team_id`, backfill, drop `players.category`) lands as **M3-prep, before M3 starts**. New contracts:
+> `listTeams(category)`, `createTeam(category, name)`, team-scoped `listPlayers(teamId)`. Add-player gains
+> `team_id` (fixed by route — no double-pick). Money invariant resolves `player → team → category` via TRIGGER
+> (see M4 amendment), money stays player-keyed.
+> **Decision-burden guard (locked):** to honor "decisions removed, not added," when a category has exactly
+> **one team the teams-list passes straight through** to that team's roster — the single-team coach never
+> sees the intermediate screen and never has to name a team. The level appears only once a 2nd team exists.
+> **Re-point guard (locked):** `team_id` is NOT in the generic edit allow-list; moving a player across
+> categories is a deliberate, history-aware action, not a routine field edit.
+
 ### 🛡️ Sweeper
 - [ ] Create `players` table: `id`, `category` enum `beet_sefer|league|bogrim`, `full_name`,
       `national_id`, `birthdate`, `jersey_number`, `position`, `height_cm`, `guardian_name`,
@@ -309,8 +364,12 @@ profile; deactivates one and sees history intact.
 ## M3 — Events & Attendance (the North Star, offline-safe)
 *Goal: create training/match sessions, then mark a 22-player roster present/late/absent in under 60s, with reasons, fully offline, syncing later with no duplicates. **Events are creatable here — the attendance gate depends on it.***
 
+> PM AMENDMENT 2026-06-20 (Atlas, owner-directed): **the team is the working unit.** Events attach to
+> `team_id` (NOT category); `getEventRoster` returns that team's players. Prerequisite: the M2-model
+> teams migration must be landed first (see M2 amendment). Salaries/dues still resolve via the team's category.
+
 ### 🛡️ Sweeper
-- [ ] `events` table: `id`, `category` (or team), `title`, `starts_at`, `location`, `type`
+- [ ] `events` table: `id`, **`team_id` → `teams.id`** (the working unit, not category), `title`, `starts_at`, `location`, `type`
       enum `training|match`, timestamps. Actions: **`createEvent`, `updateEvent`, `deleteEvent`**,
       `getTodaySessions()`, `listEvents(range)`, `getEventRoster(eventId)`. *(Event creation lands
       now, not at M6 — attendance has nothing to attach to otherwise.)*
@@ -359,14 +418,28 @@ duplicates.
 ## M4 — Money (dues/payments + salaries, generated + invariant-tested)
 *Goal: generate a month's dues and salaries, record a cash payment in 2 taps, see remaining balances and the overdue list — with the DB refusing any wrong-category row, proven by a test.*
 
+> PM AMENDMENT 2026-06-20 (Atlas, ultracode-verified): the teams-layer change (§2) means category is no
+> longer a column on the player — it's two FK hops away (`money row → players.team_id → teams.category`).
+> A Postgres row **CHECK cannot cross tables**, so the original `CHECK: player.category = …` is unbuildable.
+> **Locked decisions:** (1) money stays **`player_id`-keyed** (a player owns their dues/salary history across
+> team moves) — category is derived live via the team; the earlier "dues hang off team_id" phrasing is
+> **retracted** (events/attendance hang off team_id; MONEY is player-keyed). (2) The invariant is enforced
+> by a **BEFORE INSERT/UPDATE trigger** on `dues` and `salaries` that resolves category through
+> `players JOIN teams` and `RAISE`s on mismatch — NOT a CHECK. (3) The cross-category re-point hole is
+> closed separately: `team_id` is removed from the generic `updatePlayer` allow-list and "move player to
+> another team" becomes a deliberate, category-constrained action that blocks a cross-category move once
+> the player has money/attendance history.
+
 ### 🛡️ Sweeper
 - [ ] `dues` table (beet_sefer + league only): `id`, `player_id`, `period` (month), `amount_due`,
       `due_date`, `status` derived (paid|partial|overdue|upcoming). **UNIQUE(player_id, period)**.
-      **CHECK/RLS: player.category ∈ {beet_sefer, league}** — reject Bogrim.
+      **Invariant via BEFORE INSERT/UPDATE trigger** (resolves `player → team → teams.category`,
+      RAISEs unless category ∈ {beet_sefer, league}) — reject Bogrim. *(Not a CHECK — see amendment.)*
 - [ ] `payments` table: `id`, `due_id` (or player+period), `amount`, `method` enum
       `cash|transfer`, `paid_at`, `client_id uuid UNIQUE` (offline-safe), `recorded_by`.
 - [ ] `salaries` table (bogrim only): `id`, `player_id`, `period`, `amount`, `status`, `paid_at`.
-      **UNIQUE(player_id, period)**. **CHECK/RLS: player.category = bogrim** — reject kids.
+      **UNIQUE(player_id, period)**. **Invariant via BEFORE INSERT/UPDATE trigger** (resolves
+      `player → team → teams.category`, RAISEs unless category = bogrim) — reject kids.
 - [ ] **Monthly generation (owner-triggered, idempotent):** `generateDues(period)` creates one
       dues row per active kid at the default amount; `generateSalaries(period)` one per active
       Bogrim. Re-running the same period is a no-op (the UNIQUE constraint). *(This is the missing
@@ -531,10 +604,14 @@ only that child's balance/payments/attendance — and can reach nothing else.
       (time-to-attendance, dues-by-due-date, recovery time, D30, payment taps).
 
 ### 🧵 Loom
-- [ ] Motion pass: spinning ball + rolling pitch-lines (loading), breathing crest, animated
-      success check, bobbing-ball empty states — **all gated by `prefers-reduced-motion`.**
-- [ ] **WCAG AA contrast** pass on every screen; sunlight + one-handed pass; ≥ 44px everywhere
-      (attendance larger). Install prompt UI.
+- [ ] Install-prompt UI and any final structural / layout cleanup.
+
+### 🎬 Pitch
+- [ ] Invoke `web-animation-design`. Final **motion pass**: spinning ball + rolling pitch-lines
+      (loading), breathing crest, animated success check, bobbing-ball empty states — **all gated by
+      `prefers-reduced-motion`** and running at 60fps.
+- [ ] Final **accessibility pass** (gate-blocking sign-off): WCAG AA contrast on every screen,
+      sunlight + one-handed check, ≥ 44px everywhere (attendance larger).
 
 ### 🧭 Atlas
 - [ ] Final **six-filter no-think audit** across all flows. Confirm metrics fire. Sign off the
@@ -589,3 +666,8 @@ has crept in.**
   (7) M2 RLS stripped to coach/owner only.
   Also added: versioned migrations + Vercel + production-SMS wiring, and dropped the inert
   parent-notifications setting.
+- **Rev 2 (Cue):** Split Loom — added **🎬 Pitch** (motion + polish + accessibility), equipped with
+  the `web-animation-design` skill, so Loom no longer carries motion/a11y across all eight
+  milestones alone. Loom ships structure; Pitch layers motion and owns the WCAG AA / sunlight /
+  one-handed pass. Division rule in §1; M0 and M8 ownership updated; every motion/a11y task in any
+  milestone is Pitch's.

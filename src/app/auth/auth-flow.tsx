@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { sendOtp, verifyOtp } from "@/lib/auth/actions";
 import { normalizeIsraeliPhone } from "@/lib/auth/phone";
 
@@ -30,27 +31,49 @@ type Translate = ReturnType<typeof useTranslations<"auth">>;
 export function AuthFlow() {
   const t = useTranslations("auth");
   const router = useRouter();
+  const reduce = useReducedMotion();
   const [step, setStep] = useState<"phone" | "otp">("phone");
   const [phone, setPhone] = useState("");
 
-  return step === "phone" ? (
-    <PhoneStep
-      t={t}
-      onSent={(e164) => {
-        setPhone(e164);
-        setStep("otp");
-      }}
-    />
-  ) : (
-    <OtpStep
-      t={t}
-      phone={phone}
-      onBack={() => setStep("phone")}
-      onVerified={() => {
-        router.replace("/");
-        router.refresh();
-      }}
-    />
+  // Slide-and-fade between the two steps. Forward (phone→otp) enters from the
+  // start edge; back enters from the end. RTL-agnostic — uses opacity + small x.
+  const variants = {
+    enter: reduce ? { opacity: 0 } : { opacity: 0, x: 24 },
+    center: { opacity: 1, x: 0 },
+    exit: reduce ? { opacity: 0 } : { opacity: 0, x: -24 },
+  };
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={step}
+        variants={variants}
+        initial="enter"
+        animate="center"
+        exit="exit"
+        transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+      >
+        {step === "phone" ? (
+          <PhoneStep
+            t={t}
+            onSent={(e164) => {
+              setPhone(e164);
+              setStep("otp");
+            }}
+          />
+        ) : (
+          <OtpStep
+            t={t}
+            phone={phone}
+            onBack={() => setStep("phone")}
+            onVerified={() => {
+              router.replace("/");
+              router.refresh();
+            }}
+          />
+        )}
+      </motion.div>
+    </AnimatePresence>
   );
 }
 
@@ -123,16 +146,8 @@ function BrandPanel({ t }: { t: Translate }) {
           borderRadius: "50%",
         }}
       />
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          inset: 0,
-          opacity: 0.5,
-          backgroundImage:
-            "repeating-linear-gradient(90deg, transparent 0 58px, rgba(255,255,255,.06) 58px 60px)",
-        }}
-      />
+      {/* pitch-line texture + centre-circle ghost now ride in via the kit
+          .auth-brand::before / ::after (one canonical 44px @ .14 motif) */}
       <div style={{ position: "relative" }}>
         {/* white rounded-square tile so the crest reads as a logo lockup */}
         <div
