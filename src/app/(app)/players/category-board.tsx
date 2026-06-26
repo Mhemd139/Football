@@ -134,9 +134,7 @@ function CategoryCard({
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/[0.16] px-2.5 py-1 text-[11px] font-bold ring-1 ring-white/[0.22]">
               {hero ? (
                 <>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" aria-hidden="true">
-                    <path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-                  </svg>
+                  <span className="text-[12px] font-bold leading-none" aria-hidden="true">₪</span>
                   {t("club_pays")}
                 </>
               ) : (

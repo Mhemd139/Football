@@ -10,8 +10,16 @@ export type DueStatus = "paid" | "partial" | "overdue" | "upcoming";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
+// Who the row belongs to — embedded so the UI renders a name, not a UUID. The
+// list/overdue rows carry this; the per-row balance reads don't need it.
+type PlayerRef = { full_name: string; jersey_number: number | null };
+
 const DUE_COLUMNS = "id, player_id, period, amount_due, due_date";
 const SALARY_COLUMNS = "id, player_id, period, amount, paid_at";
+// Player embed for the list rows (PostgREST to-one join, same pattern as
+// getEventRoster). FK players.id ← dues/salaries.player_id is to-one → a single
+// object, not an array.
+const PLAYER_EMBED = "player:players!inner(full_name, jersey_number)";
 
 // A balance is amount_due minus the sum of its payments; status is derived, never
 // stored (it would drift on every payment and at every midnight).
@@ -180,11 +188,16 @@ export async function getPlayerBalance(
   return balanceForDue(supabase, due.id);
 }
 
-type DueWithStatus = Due & { paid: number; remaining: number; status: DueStatus };
+export type DueWithStatus = Due & {
+  paid: number;
+  remaining: number;
+  status: DueStatus;
+  player: PlayerRef;
+};
 
 // Shape a raw dues row + its embedded payments into the derived-balance row the
 // UI renders. Coerces money at the boundary (see `money`).
-type RawDueRow = Due & { payments: { amount: number }[] };
+type RawDueRow = Due & { payments: { amount: number }[]; player: PlayerRef };
 function toDueWithStatus(d: RawDueRow): DueWithStatus {
   const due = money(d.amount_due);
   const paid = sumPayments(d.payments);
@@ -207,7 +220,7 @@ export async function listDues(filter: {
   const supabase = await createClient();
   let query = supabase
     .from("dues")
-    .select(`${DUE_COLUMNS}, payments(amount)`)
+    .select(`${DUE_COLUMNS}, ${PLAYER_EMBED}, payments(amount)`)
     .order("due_date", { ascending: true })
     .limit(LIST_LIMIT);
   if (filter.period) query = query.eq("period", filter.period);
@@ -225,13 +238,15 @@ export async function listDues(filter: {
   return { ok: true, data: filtered };
 }
 
+export type SalaryWithPlayer = Salary & { player: PlayerRef };
+
 export async function listSalaries(filter: {
   period?: string;
-}): Promise<Result<Salary[]>> {
+}): Promise<Result<SalaryWithPlayer[]>> {
   const supabase = await createClient();
   let query = supabase
     .from("salaries")
-    .select(SALARY_COLUMNS)
+    .select(`${SALARY_COLUMNS}, ${PLAYER_EMBED}`)
     .order("period", { ascending: false })
     .limit(LIST_LIMIT);
   if (filter.period) query = query.eq("period", filter.period);
@@ -252,7 +267,7 @@ export async function getOverdue(): Promise<Result<DueWithStatus[]>> {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await supabase
     .from("dues")
-    .select(`${DUE_COLUMNS}, payments(amount)`)
+    .select(`${DUE_COLUMNS}, ${PLAYER_EMBED}, payments(amount)`)
     .lt("due_date", today)
     .order("due_date", { ascending: true })
     .limit(LIST_LIMIT);

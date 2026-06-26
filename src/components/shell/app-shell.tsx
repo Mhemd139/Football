@@ -133,12 +133,12 @@ export function AppShell({ children, locale, roleLabel, userName, userInitial }:
             const stroke = active ? ACTIVE : IDLE_MOBILE;
             const inner = (
               <>
-                {/* icon box — active icon lifts up with a spring, sits on its pill */}
-                <motion.span
-                  className="relative grid h-9 w-9 place-items-center rounded-2xl"
-                  animate={reduce ? {} : { y: active ? -2 : 0 }}
-                  transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 26 }}
-                >
+                {/* icon box — STATIC, so the shared-layout pill measures against a
+                    fixed parent and slides purely horizontally between tabs. The
+                    lift lives on the inner icon only (decoupled from the pill's
+                    FLIP), otherwise the pill inherits the box's y-translate and
+                    travels a diagonal path on navigation. */}
+                <span className="relative grid h-9 w-9 place-items-center rounded-2xl">
                   {active && (
                     <motion.span
                       layoutId="nav-pill"
@@ -146,10 +146,14 @@ export function AppShell({ children, locale, roleLabel, userName, userInitial }:
                       transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 32, mass: 0.9 }}
                     />
                   )}
-                  <span className="relative">
+                  <motion.span
+                    className="relative"
+                    animate={reduce ? {} : { y: active ? -2 : 0 }}
+                    transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 26 }}
+                  >
                     <NavIcon name={item.key} stroke={stroke} />
-                  </span>
-                </motion.span>
+                  </motion.span>
+                </span>
                 <span className={`text-[10px] font-semibold transition-colors ${active ? "text-[#2563EB]" : "text-[#94A3B8]"}`}>
                   {t(item.key)}
                 </span>

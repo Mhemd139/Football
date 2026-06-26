@@ -57,9 +57,15 @@ between them.
 4. **Manage members** (Admin): invite by phone/email → pick role → toggle category
    visibility → optional extra permissions. Edit or remove anytime; removal preserves the
    member's historical records.
-5. **Player analytics** (Profile): identity (age, ID, jersey, position, height, guardian),
-   coach-logged performance bars, 6-session rating trend, season stats, attendance ring,
-   upcoming team events, dues status.
+5. **Player profile — the kid's pride page** (the one gamified surface, see scoped reversal in
+   Anti-features): identity (age, ID, jersey, position, height, guardian) + the kid's OWN
+   merits — goals, assists, coach-logged merits, attendance, 6-session rating trend, season
+   stats — rendered beautiful and **Instagram-shareable**. Hero shows the few star numbers;
+   "full stats" expands the rest. Own achievements only, never a rank vs teammates. (Coach
+   reads the same data as analytics; the kid reads it as pride.)
+   **⚠️ Status: the layout/flow ships now on SAMPLE data (`sample: true`); the performance
+   merits are NOT a live data contract yet — goals/assists/coach-merits/rating-trend require a
+   future merits backend (its own milestone). Do not wire later work against these as existing.**
 
 ## Current IA (information architecture)
 - **Primary tabs (5, mobile bottom nav):** Home · Players · Calendar · Money · Admin.
@@ -90,8 +96,18 @@ parents informed, dues tied to real participation — all follow.)
 - **Chat / messaging between coaches and parents** — invites attention-economy patterns
   and moderation load; the parent read-only view + "contact the coach" line is enough.
 - **League standings / fixtures module** — not a JTBD for any of our three users; pure scope creep.
-- **Gamification (badges, streaks, leaderboards) for players** — contradicts the calm,
-  utilitarian coach tool; risks pressuring kids.
+- **Inter-player leaderboards / club-wide ranking of kids** — ranking children against each
+  other is the part that risks pressuring kids; we do NOT build it. (See the scoped reversal
+  below: a player's *own* pride/stats page IS now in scope — pride, not competition.)
+
+  > **🔓 SCOPED REVERSAL (owner decision, 2026-06-27):** the player-profile page is the ONE
+  > deliberately gamified surface. Each player gets a beautiful, Instagram-shareable card of
+  > **his own** merits — goals, assists, attendance, coach-logged merits — designed to make the
+  > kid proud and enthusiastic. All categories (Beet Sefer / League / Bogrim). The line we keep:
+  > it shows a kid HIS OWN achievements, never his rank vs teammates. Recording captures every
+  > merit; the hero view shows the few that make him feel like a star, with a "full stats"
+  > expand. This is the single intentional exception to the calm-utilitarian rule — the rest of
+  > the app (attendance, money, admin) stays calm and ungamified.
 - **Free-form per-player custom fields in v1** — every added field is a decision the coach
   must make pitch-side; we ship sensible fixed fields and resist the settings sprawl.
 - **A separate "reports/export" tab** — low frequency (<1×/month); lives in settings, not primary IA.

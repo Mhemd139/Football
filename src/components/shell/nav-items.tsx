@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 // The 5 app destinations, in RTL nav order. `href` null = a later milestone
-// (Calendar/Money/Admin) — rendered dimmed + a "قريبًا" tag on tap, never a dead link.
+// (Calendar/Admin) — rendered dimmed + a "قريبًا" tag on tap, never a dead link.
 export type NavItem = {
   key: "home" | "players" | "calendar" | "money" | "admin";
   href: string | null;
@@ -11,7 +11,7 @@ export const NAV_ITEMS: NavItem[] = [
   { key: "home", href: "/" },
   { key: "players", href: "/players" },
   { key: "calendar", href: null },
-  { key: "money", href: null },
+  { key: "money", href: "/money" },
   { key: "admin", href: null },
 ];
 
