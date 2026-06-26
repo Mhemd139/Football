@@ -348,7 +348,7 @@ You routed the gamified-profile backend to me to **size, not build**. I read the
 - **Goals / assists / coach-merits** — these are real events that *don't* exist anywhere yet, so they get stored. ONE extensible table, not one-table-per-stat.
 
 **(1) Rough schema shape — a single `player_stats` table (extensible, owner's "even the least important" honored by the `kind` enum, not by columns):**
-```
+```text
 player_stats
   id          uuid pk
   player_id   uuid → players  (not null)

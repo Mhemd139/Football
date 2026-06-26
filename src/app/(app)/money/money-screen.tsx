@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -87,11 +87,24 @@ export function MoneyScreen({
   const [filter, setFilter] = useState<Filter>("all");
   // Dues render from the server prop, with an optimistic overlay keyed by due id
   // so a just-recorded payment shows instantly (before router.refresh lands the
-  // authoritative row). Deriving from the prop — rather than copying it into
-  // state — means a generate/refresh always reflects fresh server data, and the
-  // overlay naturally drops once the server row matches. Salaries are read-only
-  // here (no payment path in the contract), so they render straight from prop.
+  // authoritative row). Salaries are read-only here (no payment path in the
+  // contract), so they render straight from prop.
   const [paid, setPaid] = useState<Record<string, Balance>>({});
+  // Retire each overlay once the server prop catches up to it: when the row's
+  // server `paid` reaches the optimistic `paid`, the authoritative row is fresh
+  // (or fresher) and the overlay would only mask it — so drop that key. This is
+  // what makes the overlay transient instead of a permanent override.
+  useEffect(() => {
+    setPaid((prev) => {
+      const next = Object.fromEntries(
+        Object.entries(prev).filter(([id, o]) => {
+          const row = dues.find((r) => r.id === id);
+          return row != null && row.paid < o.paid;
+        }),
+      );
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+  }, [dues]);
   const dueRows = useMemo(
     () => dues.map((r) => (paid[r.id] ? { ...r, ...paid[r.id] } : r)),
     [dues, paid],

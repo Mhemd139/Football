@@ -63,6 +63,9 @@ between them.
    stats — rendered beautiful and **Instagram-shareable**. Hero shows the few star numbers;
    "full stats" expands the rest. Own achievements only, never a rank vs teammates. (Coach
    reads the same data as analytics; the kid reads it as pride.)
+   **⚠️ Status: the layout/flow ships now on SAMPLE data (`sample: true`); the performance
+   merits are NOT a live data contract yet — goals/assists/coach-merits/rating-trend require a
+   future merits backend (its own milestone). Do not wire later work against these as existing.**
 
 ## Current IA (information architecture)
 - **Primary tabs (5, mobile bottom nav):** Home · Players · Calendar · Money · Admin.
