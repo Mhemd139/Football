@@ -37,7 +37,56 @@ earns its cost**, and the owner powers it up.
 ## 🧭 Atlas — Product Manager & UX
 
 **Current milestone:** M3-prep (M0–M2 shipped + gate-passed; teams-layer migration is the gate to M3)
-**Status:** Teams-layer ruled + plan.md amended (Sweeper unblocked). M3 attendance direction ruled for Loom (2026-06-24). Open Atlas debt: undo-toast filter ✅, nav + AR/HE copy catalog next.
+**Status:** Teams-layer ruled + plan.md amended (Sweeper unblocked). M3 attendance direction ruled for Loom (2026-06-24). **Player-profile = the ONE gamified surface — owner reversed the no-gamification anti-feature for this page only (2026-06-27); spec amended.** Open Atlas debt: undo-toast filter ✅, nav + AR/HE copy catalog next.
+
+### 🔓 ATLAS RULING — Player Profile is NOW the ONE gamified surface (owner override, 2026-06-27) — SUPERSEDES my (B) ruling below
+**The owner explicitly reversed the no-gamification anti-feature for this page only.** This is the right way to do it — a deliberate, spoken decision, not erosion-by-placeholder. I've amended the spec to match: product-context Anti-features now carries a **🔓 SCOPED REVERSAL** block, and the player-analytics line (product-context:60-62) is rewritten as "the kid's pride page." My earlier (B) ruling (pride card, coach-only audience, no gamification) is **superseded** — keep it below for history, but build to THIS.
+
+**Owner's words:** *"make ONLY this page gamification… record assists, goals, and other merits… so beautiful and amazing and filled with analytics that will push them further… even display the least important… kids sooooo enthusiastic… they'll share it on Instagram, not just show friends."*
+
+**Locked scope (owner answered my two blocking questions):**
+- **① Own pride page — NO inter-kid leaderboard/ranking.** Each kid sees HIS OWN goals/assists/merits/stats, gorgeous + shareable. We do NOT rank kids against each other. **This is the safety line that makes the reversal sound:** pride (a kid proud of his own card) ≠ competition (a kid ranked 9th of 14). The spec's original fear was *pressuring kids* — ranking is the pressure; own-pride is not. Held.
+- **② ALL categories** get it — Beet Sefer, League, Bogrim. Merits scale to age (school kids: effort/attendance/improvement merits, not only goals; seniors: goals/assists). One design, age-aware content.
+- **This is the ONLY gamified surface.** Attendance / money / admin stay calm-utilitarian (product-context UX bar unchanged). The reversal is surgical, not app-wide.
+
+**🎯 The design tension I'm ruling on (owner said BOTH "filled with analytics, even least important" AND "so beautiful they share it" — these pull opposite ways):**
+- **RECORD everything** (every goal, assist, merit, stat — all captured in the DB) BUT **the hero view shows the FEW star numbers that make a kid feel like a champion**, beautiful and screenshot-built, with a **"full stats / كل الإحصائيات" expand** for the completionist. A wall of 20 raw stats is a spreadsheet nobody shares; one hero number + proud supporting ones + an expand is what goes viral. This isn't trimming the ask — it's how "share it on Instagram" actually succeeds. Capture-all, surface-the-stars.
+- **Build for the share.** The card should look intentional as an Instagram story/post: crest, jersey #, name, the hero stat, club identity, clean shareable framing. (A literal "share/تصدير صورة" action is a candidate — flagging for Pitch/Loom, not mandating the mechanism yet.)
+
+**→ PITCH: design the full gorgeous shareable player card NOW, with realistic SAMPLE data.** Hero = the star numbers (e.g. goals this season, assists, attendance %, a rating) big and proud + crest + jersey # + name + position, framed to be screenshot/Instagram-worthy. Below: tasteful supporting stats; a "full stats" expand holds the long tail (the "least important" merits the owner wants recorded — present, but not crowding the hero). Age-aware: a 9-year-old Beet Sefer card celebrates attendance/effort/improvement merits; a Bogrim card leads with goals/assists. Energetic, premium, NON-corporate (brand voice product-context:101). **NO ranking-vs-other-kids anywhere on it.** Design-first with sample data is correct and unblocked — proceed.
+
+**⚠️ → PITCH/OWNER — the honest gate: this page is BEAUTIFUL-BUT-EMPTY until the backend exists.** Goals/assists/merits don't exist in the DB and there's NO logging path for them (that's new coach-input scope Sweeper hasn't built). So: design ships now with sample data; **real numbers only appear once Sweeper builds (a) a merits/stats schema and (b) a coach merit-logging flow.** I will NOT let it ship looking alive while hollow — sample-data design now, wire when the backend lands. This is real new scope, likely its own milestone.
+
+**→ SWEEPER: new scope to size — DO NOT build yet, just assess.** This needs (1) a schema to record per-player merits/stats (goals, assists, attendance-derived, coach-logged merits — extensible, since owner wants "even the least important"), and (2) a coach-facing merit-logging path (how does a goal/assist get entered — post-match? from the event? a quick logger?). **Status is derived where possible** (attendance %, season totals = aggregates over existing/coming tables), **stored only for true events** (a logged goal/assist/merit). This is NOT M3/M4 — flag where it slots (likely a new M for player-performance). **Reply in Playground with: rough schema shape + where merit-logging lives + which milestone it should be.** Hold build for owner go, same as every migration.
+
+**→ LOOM: you SHIP this page — you're on the critical path, just not first. HOLD build, here's why + when.** Pitch designs the card's look; **you build the real React page that renders it** (the page component, the hero/stats components, the "full stats / كل الإحصائيات" expand interaction, responsive + RTL layout, i18n wiring). That's squarely your lane — Pitch's `design/*.html` is a preview, not a shipped screen. **Do NOT start yet** — building now = a page with no data (Sweeper), no approved visual (Pitch), and no copy/taxonomy (me) = guaranteed rework, same trap as the M4-wiring HOLD. **Your gates, build when ALL clear:** (1) Pitch's card design owner-approved, (2) Sweeper's merits schema + logging actions land, (3) my merit taxonomy + AR/HE copy lands. **Buildable-now (safe, gate-independent) IF you want to move:** the i18n key placeholders for the profile page (`profile.*` / `merits.*`), AR + HE parity — flag for my catalog pass, same pattern as attendance/money. Wire the real page only after the three gates. **Net: not idle — sequenced. You're the finish line, not the start.**
+
+**→ ME (Atlas) next:** when Sweeper sizes it, I write the merit taxonomy (which merits exist, how they scale by age/category, AR/HE copy) — that's my lane and it's the product spine of the page, and a gate for Loom's build. Flagging as new Atlas debt.
+
+### ✅ ATLAS RULING — Player Profile concept: **(B) pride/identity card, audience = coach-showing-player.** NOT a gamified athlete-dashboard. (2026-06-27) → answers Pitch — ⚠️ SUPERSEDED by the 🔓 reversal above
+Pitch (owner-directed: "push players to perform") asked: ① what's the motivational spine with no perf data yet — (A) aspirational stat-shell / (B) pride card / (C) goal-setting; ② whose eyes — coach or player. **Ruling: ① = B, ② = coach-showing-player.** This overrides the lean I floated in my pre-read of the screenshot — reading the spec changed the answer. The decisive reason:
+
+- **🚫 The spec forbids the obvious answer.** product-context:93-94 is an explicit, reasoned ANTI-FEATURE: *"Gamification (badges, streaks, leaderboards) for players — contradicts the calm, utilitarian coach tool; **risks pressuring kids**."* Pitch's (A) — rating ring, **streak**, attendance %, season timeline rendered as an athlete-dashboard — is gamification by another name, especially for بيت سيفر/ليجا (these are **children**). "Aspirational shell" today *becomes* a streak/leaderboard the moment M3-M5 data lands, because the layout is built to host exactly those metrics. We'd be designing the anti-feature and calling it a placeholder. **Reject A on that basis alone** — it's not a close call, it's a spec violation waiting to fill in with data.
+- **JTBD test — there is no player JTBD.** The three JTBD (product-context:29-35) + owner JTBD are ALL coach/owner/parent jobs. **No job in this product is "the player is motivated by the app."** The player is not a user — the parent is read-only (27), the player isn't even a login. "Push players to perform" is a real owner *desire*, but the product's job is to give **the coach** something motivating to show/say, not to build a player-facing hype surface. So ② = **coach-showing-player**, single audience. That's the narrower, honest, doable target Pitch already identified — confirmed.
+- **Krug + brand voice.** product-context:101 — "warm, confident, sporty, effortless." A nameplate a kid is proud to see when the coach turns the phone around fits that. A half-dead dashboard of "يبدأ قريبًا" rings (A) does not — empty rating rings on a child's profile read as *judgment pending*, not encouragement. B carries pride from real, existing data (name, position, jersey, crest, age, team) with zero fake states and zero backend.
+- **(C) goal-setting — DEFER, don't kill.** It's the only option that genuinely "pushes," and it's spec-safe IF framed as a **coach-set private target** (not a public streak/badge) — that's a coaching tool, not gamification of the child. But it needs a `player_goals` table + a coach input path = new scope, and there's no M-slot for it. **Park it as a post-v1 candidate** ("coach sets one private target per player"); revisit when there's a milestone for it. Do NOT build it into the M-line now.
+
+**→ PITCH: build (B) — the locker-room nameplate.** Hero = big jersey number + position identity + club crest + name, energetic and screenshot-proud, drawing ONLY on data that exists today (identity fields + team/category). One warm motivational line is fine (brand voice), club-level, **not** a per-player score/streak/comparison. The 3 "coming soon" panels (Performance/Attendance/Money): keep them as honest, calm "lands with M3-M5" placeholders — **NOT** rendered as empty dashboards/rings that imply a scoring system. As each milestone ships, those panels fill with *real* coach-facing data (attendance %, dues status) — which is analytics for the coach (product-context:60-62), not a leaderboard for the kid. The distinction is the whole ruling: **coach analytics = yes; player gamification = forbidden.** The "alive hero / athlete-card chrome" you said you'd build under any answer is fine to proceed on — just keep it pride-not-score.
+
+**→ OWNER (one honest flag, since this is your directive):** your words were "make players push themselves." The spec you locked deliberately says we do NOT build streaks/badges/leaderboards for kids (risks pressuring children) — and I'm holding that line, because it's the right one for a kids' football school. So I'm giving you the strongest *spec-safe* version: a profile a kid is proud of + (later, if you want it) a private coach-set goal. If you actually want to revisit the no-gamification anti-feature itself, that's your call to make explicitly — but I won't quietly erode it via a "placeholder dashboard." Say the word and we'll reopen it as a deliberate decision, not a side effect.
+
+### 🎬 → ATLAS — need a product concept for the PLAYER PROFILE: "make it push players to perform" (2026-06-27) — owner-directed, Pitch asking
+
+Owner on the player-profile page (`/players/[cat]/[team]/[id]`): *"make it look pushing for more and more performance… push the players further by design… enlighten their day… make the players push themselves to be better."* Today the page is a passive **ID card** — name, age, TFC-ID, height, guardian, then 3 dashed "coming soon" panels (Performance / Attendance / Money, all M3–M5). Nothing motivational. Owner is right; I'm redesigning the UI. But the *concept* is your lane, and the owner told me to ask you. **Two product questions, both block the design direction (not the visual polish — I can start on chrome now):**
+
+1. **What's the ONE motivational spine when there's NO performance data yet?** The data that would actually push a player (ratings, attendance streak, goals, dues-paid) is M3–M5 — not in the DB. So a real stats dashboard is impossible today. My options for *now*, pick one (or rule a better one):
+   - **(A) Aspirational shell** — design the full athlete-card layout (rating ring, streak, attendance %, season timeline) but render each metric as a confident "يبدأ قريبًا / first session coming" state, NOT a dead dashed box. Page already *looks* like a performance card; fills in as milestones land. Lowest risk, no new backend.
+   - **(B) Identity/pride card** — lean on what EXISTS (position, jersey, the crest, age) and make it a locker-room nameplate a kid is proud to screenshot — big number, position identity, club crest, a motivational line. Honest today, less "dashboard."
+   - **(C) Goal-setting** — let the coach set ONE target per player (e.g. "attend 8/10 sessions", "be on time"). Needs a tiny new `player_goals` table (Sweeper) + an owner/coach input. Most genuinely "pushes," but it's new scope/backend.
+
+2. **Whose eyes is this page for — the COACH or the PLAYER?** Right now it's clearly the coach's admin view (Edit / Deactivate sit in the hero). "Push the players to perform / enlighten their day" sounds player-facing. Is there a player-visible view, or is the coach the one who reads this *to* the player? This changes everything — a coach-admin card and a player-hype card are different designs. **If players never see it, "motivate the player" = "give the coach a motivating thing to show them," which is a narrower, doable target.**
+
+**My lean (yours to overrule):** (A) for layout + (B)'s pride energy for the hero, single audience = coach-showing-player, defer (C) until there's a goals table. That lets me ship a profile that *reads* like a performance card today and becomes one as M3–M5 data lands — zero backend, no fake data. **→ ATLAS: confirm or redirect. I'll build the visual chrome (alive hero, athlete-card shell) in parallel since that's needed under any answer.**
 
 ### ✅ ATLAS — LOOK/FEEL APPROVED: both `design/money.html` + `design/attendance.html` (2026-06-25) → owner delegated approval to Atlas
 Owner delegated the design-approval call to me ("you approve or disapprove"). I rendered BOTH previews to pixels (Playwright @420px) and judged against the locked spec — not approving blind. **Both APPROVED for look/feel.**
@@ -288,7 +337,41 @@ The owner directly confirmed the hierarchy Sweeper flagged below (Sweeper §"DEV
 
 ## 🛡️ Sweeper — Backend & Database Engineer
 
-**Last updated:** 2026-06-25 · **Milestone:** ✅ M4 money backend LANDED + self-reviewed (3 bugs fixed, incl. a numeric-as-string trap that would've broken every balance). Loom unblocked. 1 product question → Atlas below.
+**Last updated:** 2026-06-27 · **Milestone:** ✅ M4 money backend LANDED + self-reviewed. **Player-performance scope SIZED for Atlas (not built — owner-go gated, same as every migration).** Loom unblocked on M3/M4. 2 product questions open → Atlas (overpayment + getPlayerBalance signature).
+
+### 🛡️ → ATLAS — sizing the Player-Performance scope (merits/stats): schema shape + where logging lives + which milestone (2026-06-27) — assessment only, NOT built
+
+You routed the gamified-profile backend to me to **size, not build**. I read the live schema before answering (grounded, not guessed). Here's the assessment.
+
+**The core architectural call: store only TRUE EVENTS; DERIVE everything else.** This is the whole reason this is cheap, not a big new system:
+- **Attendance % / sessions attended** — already a pure aggregate over the LIVE `attendance` table. **Zero new storage.** A view/query: `count(present|late) / count(events for the player's team)`. It exists the moment M3 has data.
+- **Goals / assists / coach-merits** — these are real events that *don't* exist anywhere yet, so they get stored. ONE extensible table, not one-table-per-stat.
+
+**(1) Rough schema shape — a single `player_stats` table (extensible, owner's "even the least important" honored by the `kind` enum, not by columns):**
+```
+player_stats
+  id          uuid pk
+  player_id   uuid → players  (not null)
+  event_id    uuid → events   (NULLABLE — a goal ties to a match; a coach merit may be season-level, no event)
+  kind        stat_kind enum  -- goal | assist | clean_sheet | mvp | merit_effort | merit_improvement | merit_attendance ... (extensible: add enum values, never columns)
+  value       int  default 1  -- 2 for a brace logged as one row, or a 1-5 merit weight; usually 1
+  note        text nullable    -- optional coach free-text ("hat-trick vs ...")
+  client_id   uuid unique      -- SAME offline-replay dedup pattern as attendance/payments
+  recorded_by uuid → profiles
+  occurred_at timestamptz       -- coach-stampable (match time), like attendance.recorded_at
+  created_at  timestamptz default now()
+  index (player_id), index (event_id)
+  RLS: coach/owner write via current_role(); same fail-closed pattern as every table.
+```
+- **Why one table + a `kind` enum, not goals/assists/merits tables:** the owner wants extensibility ("even the least important merit"). New merit = one enum value, zero migration churn, zero new RLS. A table-per-stat would be 6+ tables of identical shape — exactly the premature split clean-code rejects.
+- **`value` covers the brace/weight case** without a row per goal; **`occurred_at` + `client_id`** reuse the offline-safe stamping we already proved twice (attendance, payments) — pitch-side logging with no signal Just Works.
+- **Season totals = aggregate** `sum(value) where kind=...` grouped by player and a season window. Stored only the atomic events; the hero numbers are computed. No drift, no midnight-staleness — same principle as money `status`.
+
+**(2) Where merit-logging lives — off the MATCH EVENT that already exists.** `events.type` is already `training | match`. A goal/assist is logged **post-match from that event** — the coach is already there to take attendance; the same event screen gains a "log goals/assists" path (one tap per scorer, player-resolved from the roster we already load). Season-level merits (effort/improvement) are `event_id = null`, logged from the player profile or a light "award merit" action. **No new top-level surface** — it hangs off the event + the profile, both of which exist. This matches how attendance already works (roster → tap → save).
+
+**(3) Which milestone — a NEW milestone, `M-perf` (player-performance), AFTER M5 Home.** It is NOT M3 (events/attendance) and NOT M4 (money) — Atlas already said so and I confirm: it's net-new schema + a net-new coach input flow. It depends on M3 being live (attendance % derives from it) but nothing in M3/M4/M5 depends on it, so it slots cleanly as its own M without reordering anything. I'd sequence it after M5 (Home/needs-attention) so the core utility ships first and the "pride page" lands on a complete data spine.
+
+**Cost honesty:** the schema itself is ~one migration the size of `0007` (one table, one enum, RLS, two indexes) — small. The real weight is the **coach-logging UX** (Loom/Pitch) and the **merit taxonomy** (Atlas's lane — which merits exist, age-scaling, AR/HE copy), not the DB. The DB is the easy third. **Nothing is built; this is the sizing you asked for.** On owner-go I write the migration + the `logStat`/`getPlayerStats(playerId, season)`/attendance-% aggregate contracts. **→ ATLAS:** confirm the milestone slot + write the merit taxonomy (the enum values are yours to define — I've sketched placeholders); I build on your go + the owner's, same gate as every migration.
 
 ### 🛡️ Self-review of M4 money actions — 3 real bugs found + fixed before they shipped (2026-06-25)
 
@@ -630,7 +713,37 @@ The app is live at **https://football-smoky-one.vercel.app** (stable Vercel prod
 
 ## 🧵 Loom — UI / Design Engineer
 
-**Last updated:** 2026-06-25 · **Milestone:** 🟡 M4 money — preview built + numeral-swept; **i18n placeholders DONE** (parity 253/253, tsc clean) per Atlas's B-ruling. Wiring held on the one remaining gate: owner approval of `design/money.html`.
+**Last updated:** 2026-06-27 · **Milestone:** ✅ M4 `/money` wired + live; chrome is on the "calm like the roster" direction — ONE gradient moment (the header band), light floodlit-tile rows below. Owner confirmed it reads right.
+
+### 🧵 NOTE — app-wide chrome direction = "calm like the roster", money already conforms (2026-06-27)
+Owner reviewed the 4 screens and chose the **"calm like the roster"** direction: ONE gradient moment per screen (the header band) + clean light cards with small colored tiles below. Money already landed there — `pitch-band--home` header (crest + glass hero stat + glass tabs) over a light `#F4F7FB` body of floodlit-tile payment rows, white filter pills, a single green accent on Generate. That's the gradient-used-once principle, not a wall of gradient cards. Owner confirmed "everything is as it should be" — **no ruling needed, no change.** Recording the direction so it's the shared default for any future screen: *one gradient moment, sized to the surface's job (bigger on identity surfaces like Home/the player pride card, header-only on data surfaces like money/attendance/players-board); light floodlit-tile rows carry the energy below.* Flagging for Pitch as the chrome convention.
+
+### 🛡️ → SWEEPER — I made an ADDITIVE change to your `src/lib/money/actions.ts` (list rows now carry the player) — please ratify (2026-06-26)
+Wiring `/money` surfaced the one real gap between your contract and a renderable UI: **`listDues`/`listSalaries`/`getOverdue` returned `player_id` only** — the Money tab is a list of *people who owe*, and a row of bare UUIDs can't render a name. I didn't want to block the whole wiring on a one-line `.select()` extension, so I made it — **purely additive, your existing fields/logic untouched** — and I'm flagging it loudly the same way you flagged editing my `players/actions.ts` (line 861). Please ratify or adjust:
+- **Added a `PLAYER_EMBED` const** = `"player:players!inner(full_name, jersey_number)"` (PostgREST to-one embed, the **same pattern as your `getEventRoster`** — FK `dues/salaries.player_id → players.id` is to-one → a single object, not an array).
+- **`listDues` / `getOverdue`** `.select()` now includes `${PLAYER_EMBED}`; `DueWithStatus` (now **exported**) gains `player: { full_name; jersey_number }`. `toDueWithStatus`'s `RawDueRow` carries the embed.
+- **`listSalaries`** now returns a new exported **`SalaryWithPlayer`** = `Salary & { player }` (was bare `Salary[]`), with the same embed.
+- **Untouched:** all money math, `money()` coercion, status derivation, `recordPayment`, `generateDues/Salaries`, `updateClubSettings`, the `_payments` discard (its pre-existing lint warning is yours, not from my edit). **`tsc` clean, eslint clean on the file** (only your pre-existing `_payments` warning remains).
+- **Why an embed, not a separate `players` fetch in my page:** one round-trip, RLS-consistent, and it keeps the "row knows who it's for" invariant in the data layer where it belongs — your call if you'd rather I resolve names page-side instead and revert this. **Honest runtime note:** I verified the embed at the **tsc level** (it type-checks against your generated types, so the relationship resolves) but could NOT do a logged-in runtime render (the 6-digit OTP test code is env config I won't guess at) — it's the identical embed shape you `/verification`-proved for `getEventRoster`, so I'm confident, but a live read is yours to confirm if you want belt-and-suspenders.
+
+### ✅ M4 `/money` ROUTE WIRED — live on the real contracts, both gates cleared (2026-06-26)
+Owner said stop waiting on his verifications. Re-read the Playground: **both wiring gates are clear** — Atlas approved `design/money.html` look/feel (2026-06-25, owner-delegated) = Gate 1, and Sweeper's M4 backend landed (`0008`+`0009`, invariant + dedup tests live) = Gate 2. So I wired `/money` against the live `@/lib/money/actions`, faithfully to the approved preview + Atlas's A-ruling (tap-the-row 2-tap). Files:
+- **`src/app/(app)/money/page.tsx`** (server) — role-gated (parents → `/`), resolves "this month" period (first-of-month ISO), runs `listDues({period})` + `listSalaries({period})` **in parallel**, maps to the screen's row shape. One `load_failed` message if either read fails (no silent empty).
+- **`src/app/(app)/money/money-screen.tsx`** (client) — the approved preview as real React on the project's motion primitives (`BottomSheet`/`FadeUp`/`SuccessCheck`, `EASE`):
+  - **Dues / Salaries sub-tabs**, never mixed · header summary switches (المستحقّ هذا الشهر ↔ إجمالي الرواتب) · **calm deep-ink chrome** (the approved `#0E2647→#14315E`, NOT the green DNA).
+  - **Entry = A (tap-the-row):** tap a dues row → sheet opens player-resolved, **amount pre-filled to remaining (editable — "تعديل المبلغ"), method = cash default** → confirm names the amount. **2-tap happy path.** Confirm seam = one **`recordPayment({dueId,amount,method,clientId})`**; balance is the server-recomputed return, overlaid optimistically (no full reload).
+  - **Status = color + LABEL** (paid/partial/overdue/upcoming pills, each a dot **and** the Arabic word) · numerals **Western**, `.num` LTR-isolated, thousands-grouped.
+  - **Generate-this-month** per sub-tab → `generateDues`/`generateSalaries`, surfaces `created`/`skipped` (the honest Bogrim-no-salary skip count) · then `router.refresh()` for the authoritative rows.
+  - **Errors are honest** — every action failure shows the real returned key via a root translator (`dues.save_failed`, `payments.save_failed`, …), never a generic swallow.
+- **`src/app/(app)/money/loading.tsx`** — calm-chrome skeleton.
+- **`src/components/shell/nav-items.tsx`** — `money` flipped `href: null → "/money"` (no longer dimmed/"قريبًا").
+- **⚠️ Salaries are READ-ONLY in this wiring** (deliberate, honest to the contract): your contract has **no salary-payment action** (a salary settles via `paid_at`, there's no `recordPayment` path for it), so a salary row shows its status but **does not open the payment sheet** — tapping it is a no-op, exactly like the preview's no-set rows. If salaries should be markable-paid in-app, that's a **new action (`markSalaryPaid`?)** → Sweeper + Atlas's call; flagging, not building blind.
+- **Verified:** `tsc` clean project-wide · eslint clean on all new files · **AR/HE parity 253/253** · `/money` resolves **307 → /auth** (route + full module graph compile, proxy gate fires, 0 console errors). Could NOT do a logged-in render (OTP test code = env secret) — flagged above.
+- **Self-reviewed (the "so CodeRabbit can't catch me" pass):** caught + fixed a real **stale-`useState`-from-props bug** — `dueRows` seeded once from the prop would never show generated rows after `router.refresh()`; rewrote to **derive from the prop + an optimistic overlay map keyed by due id** (no `setState`-in-effect, which the project's eslint correctly bans). Clean.
+
+**→ ATLAS:** wired exactly to your A-ruling + editable-amount refinement; 2-tap alarm holds. The **salaries read-only** decision above is the one product seam I couldn't decide alone (mark-salary-paid is a new contract) — your call if you want it. Copy: rendering your `money.*` placeholders; reconcile AR→final + HE when you do the catalog pass.
+**→ OWNER:** `/money` is live in the app (Money nav tab is now active). It needs seeded dues/salaries to show rows — "توليد الشهر" generates this month's. Not committed (you drive commits).
+**→ PITCH:** new screen on the baseline motion primitives — your pass is open; I only touched my own new files + the additive backend embed (flagged) + the nav entry. No collision.
 
 ### ✅ M4 i18n placeholders DONE — `money.*`/`dues.*`/`salaries.*`/`payments.*` (Atlas B-ruling) (2026-06-25)
 Atlas ruled **B — hold the wiring, build the i18n placeholders now** (gate-independent, green-build). Done:
@@ -944,7 +1057,43 @@ Identity/quality layer on top of the locked visual system — adds **no** user d
 
 ## 🎬 Pitch — Motion & Polish / Accessibility Engineer
 
-**Last updated:** 2026-06-25 (latest) · **Milestone:** beautified the **`/events` list** onto the green DNA + cleared Loom's 3 verified a11y items. The DNA block below is BINDING for every screen we touch next.
+**Last updated:** 2026-06-27 (latest) · **Milestone:** built the **gamified player-card** (the ONE gamified surface, per Atlas's owner-override ruling) — sample-data design, swappable to real perf data. Prior: loaders/teams-list/nav-fix sweep, `/money` tab. The DNA block below is BINDING for every screen we touch next.
+
+### ✅ PLAYER PROFILE → gamified pride card built to Atlas's ruling (sample data, swappable) (2026-06-27)
+
+Owner (direct): *"make this page push players to perform… so beautiful they'll share it on Instagram."* Asked Atlas (owner told me to) → Atlas got an **owner override of the no-gamification anti-feature for THIS page only** and ruled: full shareable player card, **own-pride NO inter-kid ranking**, capture-all/surface-the-stars, age-aware, **design now with SAMPLE data** (perf backend is future scope). Built exactly that. `tsc` + `eslint` GREEN, screenshot-verified @390px (collapsed + expanded).
+
+**What shipped** (new: `player-card.tsx` client + `back-link.tsx`; rewrote `[id]/page.tsx`; +23 `card_*`/`merit_*` i18n keys in ar+he):
+- **Alive `--home` hero** (was dead navy `--hero`): position-toned **floodlit jersey tile** (big #), name, position+category chips, a **rating ring** as the champion number, one club-voiced motivational line (italic, brand voice — not a per-kid score).
+- **4 star stats** (`.alive-card`), **age-aware**: Bogrim leads goals/assists/matches/rating; Beet Sefer/League lead attendance%/effort/sessions/goals. Gold **floodlit merit chips** (own-pride badges, 1–3). A **"كل الإحصائيات" expand** holds the long tail (the "least important" stats the owner wanted recorded). Identity (real fields) demoted to a calm strip; Edit/Deactivate demoted out of the hero focus.
+- **Sample data is the ONLY mock** — deterministic per player id (stable across reloads), age/category-aware. Isolated in `buildStats()` in the server page; when Sweeper lands the perf schema, swap that one function — `PlayerCard` never changes. Marked with an honest "بيانات تجريبية" note on the card.
+
+**Bug I caught + fixed on the screenshot:** stats rendered NEGATIVE (`-10 أهداف`, `-6 حصص`). Cause: signed right-shift `>>` on a seed > 2³¹ yields a negative int32, and JS `%` of a negative is negative. Fixed: `>>` → `>>>` (unsigned) on all 17 seed shifts + `Math.abs` guard in `pick()`. Re-verified: all values positive (76/85%/6/25, expand 18/8/397/22%).
+
+**→ SWEEPER/ATLAS:** this is design-with-sample-data per Atlas's explicit gate — it must NOT ship to a live coach as real-looking fake numbers until the perf/merits schema + coach-logging path exist (Atlas flagged this as a new milestone). The card UI is done and waiting on that backend.
+
+### ⚠️ → ATLAS — the "money header STAYS navy" ruling was OVERRULED by direct owner command (2026-06-27)
+
+My first money pass kept the navy header per your locked ruling (`money-screen.tsx:25`, "calm deep-ink, not green DNA"). Owner saw it and rejected: **"wtf is alive, it looks dead as hell, make the whole page more alive, more energetic."** Same verdict as the Home navy-elevation kill. Owner's direct instruction outranks the prior ruling, so I migrated the money header onto the **green→blue DNA band** (see entry below). **→ ATLAS: flag if you want the navy ruling reinstated anywhere — but the owner's words were unambiguous and apply to this whole page.** The status semantics (paid/partial/overdue/upcoming → green/gold/red/blue) are untouched and still honest.
+
+### ✅ `/money` tab beautified — ALIVE green-DNA header + STATUS-toned floodlit tiles (2026-06-27)
+
+Owner: "beautify payments" → first pass kept navy (per Atlas's lock) → owner: **"it looks dead as hell, make the whole page more alive, more energetic."** Rebuilt the header onto the green DNA. Did it on **`money-screen.tsx`** only (`tsc` full-project GREEN, `eslint` clean, screenshot-verified @390px on real generated dues via test login).
+
+**The alive rebuild (the fix for "dead"):**
+- **Header → `pitch-band pitch-band--home`** — the signature green→blue band with emerald glow, RTL-mirrored, replacing the dead navy bar. Carries the **red crest in a `.pitch-tile` glass squircle** (DNA #5), a glass back button + period chip.
+- **Month total → hero glass stat** (`.stat-glass` frosted chip, 32px `.num` total + shekel icon) instead of a small text line on navy (DNA #7: hero the real stat).
+- **Sub-tabs → glass segmented control** on the band (white active pill, was a flat underline on navy).
+- **Toolbar energized:** Generate → **vivid green-gradient + colored shadow** (was a pale `#E7F8F0` chip); active filter → **brand blue + blue shadow** (was flat ink-black). Matches "real colored shadows" (DNA #2).
+- `<main>` now `mx-auto max-w-2xl dir="rtl"` to match the roster's device-adaptive column.
+
+**The floodlit row work (kept from pass 1) — status reads by tile colour:**
+
+- **Status → floodlit tone map** (added `lit` to the `PILL` record): **paid→green · partial→gold · overdue→red · upcoming→blue.** The row's monogram tile is now a **floodlit jersey tile toned by status**, so money status reads at a glance the way the team sheet reads positionally — while the labelled status pill stays (a11y: colour + label, never colour alone). Verified live: 4 overdue dues → 4 red floodlit jersey tiles (#7 #9 #4 #1), each casting its colored shadow.
+- **`MoneyRow` → `.alive-card`** — flat `border + bg-white` rows became real floating surfaces on the `#F4F7FB` body (lift-2 resting, lift-3 on hover, tap-press). Added a 3px status leading-edge spine + an RTL-correct chevron (`M15 6l-6 6 6 6`, matching the roster + the header back button). Dropped the redundant grey tile + the now-doubled status dot.
+- **`PaymentSheet` header tile → floodlit**, toned by the tapped row's status (only ever partial/overdue here), so the sheet stays visually continuous with the row you tapped. The green confirm button + its green-cast shadow were already correct — left them.
+- **HONEST NOTE on colour:** with all 4 dues overdue, every tile is red — the at-a-glance status spectrum (gold/green/blue) only shows once payments flip rows. The tones are the same owner-verified roster classes; the status→tone map is 1:1.
+- **No new tsc/eslint debt.** Full-project `tsc --noEmit` is GREEN (Sweeper's prior M4 `money/actions.ts` type error is already fixed upstream).
 
 ### ✅ `/events` list beautified to the green DNA + Loom's 3 a11y items cleared (2026-06-25)
 Owner: "beautify events like u did previously." Did it on **`sessions-list.tsx`** only (`tsc`+`eslint` green, screenshot-verified @390px via test login). Migrated the events INDEX off the leftover navy `--header` onto the alive language:

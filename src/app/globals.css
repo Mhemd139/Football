@@ -59,7 +59,7 @@ body {
   }
 }
 .skl {
-  background: linear-gradient(100deg, #e3eaf1 30%, #f2f6fa 50%, #e3eaf1 70%);
+  background: linear-gradient(100deg, #cdd9e6 30%, #eef3f8 50%, #cdd9e6 70%);
   background-size: 220% 100%;
   animation: tfc-shimmer 1.4s linear infinite;
   border-radius: 10px;

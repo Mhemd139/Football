@@ -36,31 +36,32 @@ export function TeamsList({
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-2xl flex-col" dir="rtl">
-      <header className="pitch-band pitch-band--header flex items-center gap-2.5 px-5 pb-4 pt-6">
+      <header className="pitch-band pitch-band--home flex items-center gap-3 px-5 pb-6 pt-7 lg:rounded-b-[28px]">
         <Link
           href="/players"
           aria-label={tp("back")}
-          className="-m-1.5 grid h-11 w-11 place-items-center rounded-lg bg-white/[0.16] text-white ring-1 ring-white/[0.28] backdrop-blur-sm transition-colors hover:bg-white/[0.24]"
+          className="-m-1.5 grid h-11 w-11 flex-none place-items-center rounded-xl bg-white/[0.16] text-white ring-1 ring-white/[0.28] backdrop-blur-sm transition-colors hover:bg-white/[0.24]"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-            <path d="M9 6l6 6-6 6" />
+            <path d="M15 6l-6 6 6 6" />
           </svg>
         </Link>
         <motion.span
           aria-hidden
-          className="pitch-tile grid h-11 w-11 flex-none place-items-center rounded-2xl"
+          className="pitch-tile grid h-[52px] w-[52px] flex-none place-items-center rounded-2xl"
           initial={reduce ? false : { scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={reduce ? { duration: 0 } : { ...SPRING, delay: 0.3 }}
         >
-          <Image src="/assets/tfc-crest-circle.png" alt="" width={26} height={26} className="object-contain" />
+          <Image src="/assets/tfc-crest-circle.png" alt="" width={32} height={32} className="object-contain" />
         </motion.span>
-        <div>
-          <h1 className="text-[17px] font-bold text-white">{categoryName}</h1>
-          <p className="mt-0.5 flex items-baseline gap-1">
-            <span className="num num-count text-[30px] font-bold leading-[0.9] tracking-tight text-white">{teams.length}</span>
-            <span className="text-[10.5px] font-medium text-white/80">{tp("count_unit")}</span>
-          </p>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-[19px] font-bold leading-tight text-white">{categoryName}</h1>
+          <p className="mt-0.5 text-[12px] font-medium text-white/85">{tp("count_players", { count: counts ? Object.values(counts).reduce((a, b) => a + b, 0) : 0 })}</p>
+        </div>
+        <div className="flex-none text-center">
+          <div className="num text-[34px] font-bold leading-[0.85] tracking-tight text-white">{teams.length}</div>
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-white/75">{t("title")}</div>
         </div>
       </header>
 
@@ -124,27 +125,24 @@ function TeamRow({ team, count, unit }: { team: Team; count: number; unit: strin
   return (
     <Link
       href={`/players/${team.category}/${team.id}`}
-      className="relative flex items-center gap-3.5 overflow-hidden rounded-2xl border border-[#E3EAF1] bg-white p-3.5 transition-[border-color,box-shadow] hover:border-[#C7D7F0] hover:shadow-sm active:scale-[0.97]"
+      className="alive-card relative flex items-center gap-3.5 overflow-hidden p-3.5"
     >
-      {/* accent leading-edge (RTL start) */}
+      {/* status spine (RTL start) */}
       <span aria-hidden className="absolute inset-y-0 start-0 w-[3px]" style={{ background: "#2563EB" }} />
-      <div
-        className="grid h-11 w-11 flex-none place-items-center rounded-xl ring-1"
-        style={{ background: "#E8F0FD", "--tw-ring-color": "#D3E1F7" } as CSSProperties}
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E50C8" strokeWidth="1.7" aria-hidden="true">
+      <span aria-hidden className="floodlit floodlit--blue h-[52px] w-[52px] flex-none rounded-2xl">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.9" className="drop-shadow-[0_1px_1px_rgba(11,26,46,0.25)]">
           <path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2" />
           <circle cx="10" cy="7" r="4" />
           <path d="M21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
         </svg>
-      </div>
+      </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-bold text-[#0B1A2E]">{team.name}</div>
-        <div className="num mt-0.5 text-[11px] text-[#5E6E80]">
+        <div className="text-[15px] font-bold tracking-tight text-[#0B1A2E]">{team.name}</div>
+        <div className="num mt-0.5 text-[11.5px] text-[#5E6E80]">
           {count} {unit}
         </div>
       </div>
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7C8BA1" strokeWidth="2" aria-hidden="true">
+      <svg className="flex-none text-[#C2CDD9]" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
         <path d="M15 6l-6 6 6 6" />
       </svg>
     </Link>
