@@ -38,6 +38,9 @@ no DSN). Nothing to copy. TFC Manager is the first to get this.
 - **Privacy scrub (non-negotiable):** `sendDefaultPii: false` + a `beforeSend` hook
   that drops `phone`, `national_id`, `guardian_phone`, `guardian_name` from any
   event before it leaves the device. This app holds minors' data.
+  - *Note:* `guardian_name` was dropped from the schema (PR #3). It's kept in the
+    scrub list defensively — a beforeSend hook should cover legacy/stale event
+    shapes, not just the current one; scrubbing a now-absent field is a no-op.
 - **One vendor.** No custom `error_events` table, no bespoke dashboard, no graphify
   graph for this. Sentry's own dashboard is the "graph."
 
@@ -126,8 +129,9 @@ matching the project's existing rule. The plan will flag the exact stop point.
   (source maps working), route, role, and locale.
 - A forced client render crash on a phone viewport appears in Sentry **and** shows
   the warm RTL fallback (no white screen).
-- `national_id` / phone / guardian fields are **absent** from the captured event
-  payload (scrub verified).
+- `national_id` / phone / guardian fields (`guardian_phone`; `guardian_name`
+  covered for legacy events though dropped in PR #3) are **absent** from the
+  captured event payload (scrub verified).
 - `withNextIntl` still functions — AR/HE + RTL unaffected by the config wrap.
 - `npm run test` runs Vitest green on a smoke test.
 - No DSN/secret committed to git.

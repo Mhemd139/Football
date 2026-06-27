@@ -36,7 +36,7 @@ export default async function RosterPage({
       teamId={teamId}
       teamName={team.name}
       players={playersRes.ok ? playersRes.data : []}
-      loadError={playersRes.ok ? null : t(playersRes.error)}
+      loadError={playersRes.ok ? null : t("load_failed")}
     />
   );
 }
