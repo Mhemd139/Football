@@ -91,7 +91,7 @@ export function TeamsList({
           type="button"
           onClick={() => setSheetOpen(true)}
           aria-label={t("add")}
-          className="fixed bottom-6 start-5 grid h-12 w-12 place-items-center rounded-full text-white shadow-[0_10px_24px_rgba(37,99,235,0.4)]"
+          className="fixed bottom-28 start-5 z-50 grid h-12 w-12 place-items-center rounded-full text-white shadow-[0_10px_24px_rgba(37,99,235,0.4)] lg:bottom-6"
           style={{ background: "#2563EB" }}
           initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
           animate={{ opacity: 1, scale: 1 }}

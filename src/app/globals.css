@@ -314,6 +314,25 @@ body {
     inset 0 -6px 14px rgba(110, 20, 20, 0.3),
     0 8px 22px rgba(192, 57, 43, 0.22);
 }
+/* position-driven floodlit — one base color in `--pos` builds the whole lit
+   gradient (lit top rim → deepened base → darker bottom) so all 7 football
+   positions get their OWN distinct tile, not the 4-tone bucket. The dominant
+   band is the base mixed ~22% toward black: that pulls even the lightest bases
+   (amber GK, sky winger) down to where WHITE numerals clear AA across the whole
+   tile, while the hue stays clearly distinct. The white numeral also carries a
+   dark drop-shadow halo. Recolor = one hex in positions.ts. */
+.floodlit--pos {
+  background: linear-gradient(
+    150deg,
+    color-mix(in srgb, var(--pos) 88%, white) 0%,
+    color-mix(in srgb, var(--pos) 80%, black) 42%,
+    color-mix(in srgb, var(--pos) 52%, black) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -6px 14px color-mix(in srgb, var(--pos) 45%, black 55%),
+    0 8px 22px color-mix(in srgb, var(--pos) 40%, transparent);
+}
 /* the floodlight beam — a soft top sheen riding over the gradient */
 .floodlit::after {
   content: "";

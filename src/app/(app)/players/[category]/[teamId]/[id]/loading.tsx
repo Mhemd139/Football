@@ -1,6 +1,5 @@
-// Player-card route loader — mirrors the live gamified card: green→blue DNA hero
-// (jersey tile + name + rating ring), the star-stat grid, a merit chip, the
-// full-stats toggle, and the identity strip.
+// Player-card route loader — mirrors the simple identity+goals card: green→blue
+// DNA hero (jersey tile + name + chips + motto), one goals block, identity strip.
 export default function ProfileLoading() {
   return (
     <main aria-hidden="true" className="mx-auto w-full max-w-2xl pb-10" dir="rtl">
@@ -22,40 +21,25 @@ export default function ProfileLoading() {
             <div className="mt-2 flex gap-1.5">
               <div className="h-5 w-16 rounded-full bg-white/[0.18]" />
               <div className="h-5 w-16 rounded-full bg-white/[0.18]" />
+              <div className="h-5 w-12 rounded-full bg-white/[0.18]" />
             </div>
           </div>
-          {/* rating ring */}
-          <div className="h-[64px] w-[64px] flex-none rounded-full bg-white/[0.18] ring-1 ring-white/[0.26]" />
         </div>
 
         <div className="mt-4 h-4 w-2/3 rounded bg-white/25" />
       </header>
 
-      {/* star stats */}
-      <section className="px-5 pt-4">
-        <div className="mb-2.5 h-4 w-24 rounded skl" />
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="alive-card flex flex-col items-center gap-2 p-3.5">
-              <div className="h-6 w-12 rounded skl" />
-              <div className="h-3 w-14 rounded skl" />
+      {/* focal stats — goals + attendance */}
+      <section className="grid grid-cols-1 gap-2.5 px-5 pt-4 sm:grid-cols-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="alive-card flex items-center gap-4 p-4">
+            <div className="h-[56px] w-[56px] flex-none rounded-2xl skl" />
+            <div className="min-w-0 flex-1">
+              <div className="h-3 w-24 rounded skl" />
+              <div className="mt-2 h-7 w-16 rounded skl" />
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* merits */}
-      <section className="px-5 pt-4">
-        <div className="mb-2.5 h-4 w-20 rounded skl" />
-        <div className="flex gap-2">
-          <div className="h-9 w-28 rounded-full skl" />
-          <div className="h-9 w-24 rounded-full skl" />
-        </div>
-      </section>
-
-      {/* full-stats toggle */}
-      <section className="px-5 pt-4">
-        <div className="h-12 rounded-2xl skl" />
+          </div>
+        ))}
       </section>
 
       {/* identity strip */}

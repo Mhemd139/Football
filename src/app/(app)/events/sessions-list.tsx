@@ -76,7 +76,7 @@ export function SessionsList({
         type="button"
         onClick={() => setCreateOpen(true)}
         aria-label={t("add")}
-        className="fixed bottom-6 start-5 z-30 grid h-14 w-14 place-items-center rounded-full text-white shadow-[0_12px_28px_rgba(4,120,87,0.45)] ring-1 ring-white/20"
+        className="fixed bottom-28 start-5 z-50 grid h-14 w-14 place-items-center rounded-full text-white shadow-[0_12px_28px_rgba(4,120,87,0.45)] ring-1 ring-white/20 lg:bottom-6"
         style={{ background: "linear-gradient(140deg,#10B981,#047857)" }}
         initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
         animate={{ opacity: 1, scale: 1 }}
