@@ -77,7 +77,6 @@ export function PlayerFormSheet({
       jersey_number: toNumOrNull(String(fd.get("jersey_number") ?? "")),
       position: String(fd.get("position") ?? "").trim() || null,
       height_cm: toNumOrNull(String(fd.get("height_cm") ?? "")),
-      guardian_name: String(fd.get("guardian_name") ?? "").trim() || null,
       guardian_phone: String(fd.get("guardian_phone") ?? "").trim() || null,
     };
 
@@ -165,12 +164,6 @@ export function PlayerFormSheet({
             label={t("national_id")}
             defaultValue={player?.national_id ?? undefined}
             mono
-          />
-          <Field
-            name="guardian_name"
-            label={t("guardian")}
-            placeholder={t("form_guardian_placeholder")}
-            defaultValue={player?.guardian_name ?? undefined}
           />
           <Field
             name="guardian_phone"

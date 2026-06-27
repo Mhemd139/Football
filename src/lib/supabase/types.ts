@@ -213,7 +213,6 @@ export type Database = {
           birthdate: string | null
           created_at: string
           full_name: string
-          guardian_name: string | null
           guardian_phone: string | null
           height_cm: number | null
           id: string
@@ -229,7 +228,6 @@ export type Database = {
           birthdate?: string | null
           created_at?: string
           full_name: string
-          guardian_name?: string | null
           guardian_phone?: string | null
           height_cm?: number | null
           id?: string
@@ -245,7 +243,6 @@ export type Database = {
           birthdate?: string | null
           created_at?: string
           full_name?: string
-          guardian_name?: string | null
           guardian_phone?: string | null
           height_cm?: number | null
           id?: string

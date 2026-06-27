@@ -155,7 +155,7 @@ export default async function PlayerProfilePage({
     { label: t("age"), value: has(age) ? String(age) : NS, unit: has(age) ? t("age_unit") : undefined, mono: has(age) },
     { label: t("national_id"), value: p.national_id || NS, mono: has(p.national_id) },
     { label: t("height"), value: p.height_cm != null ? String(p.height_cm) : NS, unit: p.height_cm != null ? t("height_unit") : undefined, mono: p.height_cm != null },
-    { label: t("guardian"), value: p.guardian_name || NS, mono: false },
+    { label: t("guardian_phone"), value: p.guardian_phone || NS, mono: !!p.guardian_phone },
   ];
 
   return (
