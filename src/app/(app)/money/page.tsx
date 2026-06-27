@@ -1,8 +1,13 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { getSessionUser } from "@/lib/auth/actions";
-import { listDues, listSalaries } from "@/lib/money/actions";
-import { MoneyScreen, type DueRow, type SalaryRow } from "./money-screen";
+import { listDues, listSalaries, listPayments } from "@/lib/money/actions";
+import {
+  MoneyScreen,
+  type DueRow,
+  type SalaryRow,
+  type LedgerRow,
+} from "./money-screen";
 
 // /money — the M4 Money tab. Dues (kids) + Salaries (Bogrim) in two sub-tabs,
 // never mixed (the DB triggers enforce the direction; the UI just shows the
@@ -29,9 +34,12 @@ export default async function MoneyPage() {
   const t = await getTranslations("money");
   const period = currentPeriod();
 
-  const [duesRes, salariesRes] = await Promise.all([
+  // Three independent reads for this period → run in parallel. The ledger (M4.5)
+  // is the coach/owner transaction list; RLS already fails parents closed.
+  const [duesRes, salariesRes, paymentsRes] = await Promise.all([
     listDues({ period }),
     listSalaries({ period }),
+    listPayments({ period }),
   ]);
 
   const dues: DueRow[] = duesRes.ok
@@ -62,13 +70,35 @@ export default async function MoneyPage() {
       }))
     : [];
 
-  const loadError = duesRes.ok && salariesRes.ok ? null : t("load_failed");
+  // The transaction ledger — every logged payment this period, newest first.
+  // Carries method + status + cheque number so a cheque (and a bounced one) reads
+  // distinctly. Already RLS-scoped to coach/owner server-side.
+  const ledger: LedgerRow[] = paymentsRes.ok
+    ? paymentsRes.data.map((p) => ({
+        id: p.id,
+        name: p.player.full_name,
+        jersey: p.player.jersey_number,
+        amount: p.amount,
+        method: p.method,
+        status: p.status,
+        chequeNumber: p.cheque_number,
+        paidAt: p.paid_at,
+        // Who logged it (Atlas ruling 2026-06-28) — server-set from auth.uid(),
+        // embedded via recorded_by → profiles(full_name). null for legacy M4 rows
+        // that predate the rule; the row's "logged by" line renders only when set.
+        loggedBy: p.recorded_by?.full_name ?? null,
+      }))
+    : [];
+
+  const loadError =
+    duesRes.ok && salariesRes.ok && paymentsRes.ok ? null : t("load_failed");
 
   return (
     <MoneyScreen
       period={period}
       dues={dues}
       salaries={salaries}
+      ledger={ledger}
       loadError={loadError}
     />
   );
