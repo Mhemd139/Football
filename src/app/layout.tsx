@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic, IBM_Plex_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 // ponytail: Hebrew uses the same Plex Sans Arabic face for now (covers Latin/Hebrew glyphs);
@@ -37,6 +38,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
