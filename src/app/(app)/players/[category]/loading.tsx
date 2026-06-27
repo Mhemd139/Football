@@ -2,7 +2,7 @@
 // (back + crest tile + name + count rail) and alive-card team rows.
 export default function TeamsLoading() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col" dir="rtl">
+    <main aria-hidden="true" className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col" dir="rtl">
       <header className="pitch-band pitch-band--home flex items-center gap-3 px-5 pb-6 pt-7 lg:rounded-b-[28px]">
         <div className="h-11 w-11 flex-none rounded-xl bg-white/[0.16] ring-1 ring-white/[0.28]" />
         <div className="h-[52px] w-[52px] flex-none rounded-2xl bg-white/[0.18] ring-1 ring-white/[0.28]" />

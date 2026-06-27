@@ -3,7 +3,7 @@
 // full-stats toggle, and the identity strip.
 export default function ProfileLoading() {
   return (
-    <main className="mx-auto w-full max-w-2xl pb-10" dir="rtl">
+    <main aria-hidden="true" className="mx-auto w-full max-w-2xl pb-10" dir="rtl">
       {/* hero — alive --home band */}
       <header className="pitch-band pitch-band--home px-5 pb-6 pt-7 lg:rounded-b-[28px]">
         <div className="flex items-center justify-between">

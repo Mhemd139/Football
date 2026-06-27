@@ -4,7 +4,7 @@
 // surface so the loading shape reads clearly.
 export default function HomeLoading() {
   return (
-    <main dir="rtl" className="mx-auto w-full max-w-5xl">
+    <main aria-hidden="true" dir="rtl" className="mx-auto w-full max-w-5xl">
       <header className="pitch-band pitch-band--home px-6 pb-8 pt-11 lg:rounded-b-[28px]">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3.5">
