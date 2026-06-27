@@ -26,8 +26,14 @@ The owner reads the dashboard; the agent reads the issue and goes straight to th
 broken code.
 
 **Prior art check:** the sibling `C:\Dev\basketball` repo has **no** crash
-monitoring (no `@sentry/*` dep, no `captureException`, plain `next.config.ts`,
-no DSN). Nothing to copy. TFC Manager is the first to get this.
+monitoring. But `C:\Dev\Seqaya` (native Android, Kotlin) **does** — Sentry
+`7.18.0`, shipping with a real DSN. Its code doesn't port (different stack), but
+its *architecture and privacy discipline* do, and are adopted here (see §2): auto-
+init disabled + a manually-gated init that no-ops without a DSN or outside
+production, `isSendDefaultPii = false`, a `beforeSend` that default-denies
+auto-attached fingerprinting contexts, and the whole init wrapped so a crash
+reporter can never crash the app. TFC goes one step further than Seqaya on **source
+maps** (web minifies; `withSentryConfig` uploads them — Seqaya skipped mapping).
 
 ## 2. Scope (locked)
 
@@ -64,12 +70,14 @@ exactly as-is; Sentry wraps *outside* it. Final: `withSentryConfig(withNextIntl(
 
 Attached to every event:
 
-- **User:** `Sentry.setUser({ id: auth.uid(), role })` set once after OTP verify
-  (in the verify path that already establishes the session). Lets the owner filter
-  "crashed for a *parent*" vs "for the coach." Only the Supabase user id + role —
-  no PII.
-- **Locale tag:** `ar` / `he`. RTL bugs often reproduce in only one language;
-  this makes them filterable.
+- **User:** `Sentry.setUser({ id, role })` using the `{ id, role, locale }` already
+  returned by `getSessionUser()` (`src/lib/auth/actions.ts`, which calls
+  `supabase.auth.getUser()`). Set on the server when a session is resolved and
+  cleared (`Sentry.setUser(null)`) on sign-out. Lets the owner filter "crashed for a
+  *parent*" vs "for the coach." Only the Supabase user id + role — no PII.
+- **Locale tag:** `ar` / `he` (the `locale` from the same `getSessionUser()`
+  result, via `Sentry.setTag('locale', locale)`). RTL bugs often reproduce in only
+  one language; this makes them filterable.
 - **Route:** automatic from the Sentry Next integration.
 - **Release:** Vercel git SHA (`VERCEL_GIT_COMMIT_SHA`), so a crash maps to the
   deploy that introduced it.
@@ -95,8 +103,11 @@ so the same crash isn't double-reported on re-render.
 
 TFC has **no tests yet**. BasketBall uses Vitest + Playwright; we mirror that stack.
 
-- **Vitest** — unit + invariant tests. Config + first smoke test that proves the
-  runner works. Sweeper writes the DB-invariant/RLS tests per plan.md §4 (money
+- **Vitest** — unit + invariant tests. Adds `vitest` as a devDependency, a
+  `vitest.config.ts`, **and a `"test": "vitest run"` script to `package.json`**
+  (it has none today — only `dev`/`build`/`start`/`lint`), plus a first smoke test
+  that proves the runner works. Sweeper writes the DB-invariant/RLS tests per
+  plan.md §4 (money
   category invariant, offline-replay dedup, parent read-scope); **Keeper owns the
   harness they run in**, the config, and regression coverage on shared logic
   (e.g. the `<Money>` formatter, locale/numeral rendering).
@@ -133,7 +144,8 @@ matching the project's existing rule. The plan will flag the exact stop point.
   covered for legacy events though dropped in PR #3) are **absent** from the
   captured event payload (scrub verified).
 - `withNextIntl` still functions — AR/HE + RTL unaffected by the config wrap.
-- `npm run test` runs Vitest green on a smoke test.
+- `package.json` gains a `"test": "vitest run"` script and `npm test` runs Vitest
+  green on a smoke test.
 - No DSN/secret committed to git.
 
 ## 8. Open follow-ons (tracked, not in this plan)
