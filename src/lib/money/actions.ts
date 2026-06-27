@@ -2,11 +2,19 @@
 
 import { createClient } from "@/lib/supabase/server";
 import type { Tables, Enums } from "@/lib/supabase/types";
+import {
+  money,
+  sumPayments,
+  deriveStatus,
+  remaining,
+  monthDueDate,
+  type DueStatus,
+} from "./balance";
 
 export type Due = Omit<Tables<"dues">, "created_at">;
 export type Salary = Omit<Tables<"salaries">, "created_at">;
 export type PaymentMethod = Enums<"payment_method">;
-export type DueStatus = "paid" | "partial" | "overdue" | "upcoming";
+export type { DueStatus };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -25,25 +33,8 @@ const PLAYER_EMBED = "player:players!inner(full_name, jersey_number)";
 // stored (it would drift on every payment and at every midnight).
 type Balance = { due: number; paid: number; remaining: number; status: DueStatus };
 
-// Coerce a money value to a number at the read boundary. PostgREST may serialize
-// numeric as a string to preserve precision; the generated types say `number`.
-// Number() normalizes both ("150.00" and 150 -> 150) so the math is never string
-// concatenation. Round to 2dp to keep float sums exact at agora precision.
-const money = (v: number | string): number =>
-  Math.round(Number(v) * 100) / 100;
-
-function deriveStatus(amountDue: number, paid: number, dueDate: string): DueStatus {
-  if (paid >= amountDue) return "paid";
-  if (paid > 0) return "partial";
-  // unpaid: overdue once the due date has passed, otherwise still upcoming.
-  return isPastDue(dueDate) ? "overdue" : "upcoming";
-}
-
-// Past due = the due date is strictly before today (date-only comparison, no tz
-// skew from comparing a date string to a full timestamp).
-function isPastDue(dueDate: string): boolean {
-  return dueDate < new Date().toISOString().slice(0, 10);
-}
+// Pure money math (money/sumPayments/deriveStatus/remaining/monthDueDate) lives
+// in ./balance — dependency-free and unit-tested.
 
 // ── Generation (owner-triggered, idempotent) ───────────────────────────────
 
@@ -206,7 +197,7 @@ function toDueWithStatus(d: RawDueRow): DueWithStatus {
     ...rest,
     amount_due: due,
     paid,
-    remaining: money(due - paid),
+    remaining: remaining(due, paid),
     status: deriveStatus(due, paid, d.due_date),
   };
 }
@@ -302,10 +293,6 @@ export async function updateClubSettings(input: {
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-function sumPayments(payments: { amount: number }[]): number {
-  return money(payments.reduce((acc, p) => acc + Number(p.amount), 0));
-}
-
 async function balanceForDue(
   supabase: Awaited<ReturnType<typeof createClient>>,
   dueId: string,
@@ -326,16 +313,8 @@ async function balanceForDue(
     data: {
       due,
       paid,
-      remaining: money(due - paid),
+      remaining: remaining(due, paid),
       status: deriveStatus(due, paid, data.due_date),
     },
   };
-}
-
-// Default due date: the 10th of the period's month.
-function monthDueDate(period: string): string {
-  const d = new Date(period);
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 10))
-    .toISOString()
-    .slice(0, 10);
 }

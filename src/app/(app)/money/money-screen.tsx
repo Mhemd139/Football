@@ -11,6 +11,7 @@ import {
   type DueStatus,
   type PaymentMethod,
 } from "@/lib/money/actions";
+import { fmtNumber as fmt } from "@/lib/i18n/numerals";
 import {
   AnimatePresence,
   BottomSheet,
@@ -61,9 +62,8 @@ const PILL: Record<
   upcoming: { bg: "#EAF0FB", fg: "#2563EB", dot: "#60A5FA", lit: "blue" },
 };
 
-// Western numerals even in the Arabic UI, with thousands grouping — the club
-// reads 3,500, not ٣٬٥٠٠ (owner ruling). Numerals live in .num spans (LTR-isolated).
-const fmt = (n: number) => n.toLocaleString("en-US");
+// Western numerals even in the Arabic UI (fmt = fmtNumber, imported above);
+// numerals live in .num spans (LTR-isolated). See @/lib/i18n/numerals.
 
 export function MoneyScreen({
   period,
