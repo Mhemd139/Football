@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import type { Player, Category } from "@/lib/players/actions";
+import { positionMeta } from "@/lib/players/positions";
 import { PlayerFormSheet } from "./player-form-sheet";
 import { motion, AnimatePresence, useReducedMotion, EASE, SPRING } from "@/components/motion/primitives";
 
@@ -31,13 +32,18 @@ export function Roster({
   const filtered = useMemo(() => {
     const q = query.trim();
     if (!q) return players;
-    return players.filter(
-      (p) =>
+    return players.filter((p) => {
+      // Match the player's position by its LOCALIZED label (e.g. "جناح"), not the
+      // raw enum value ("winger") — the coach searches in their own language.
+      const meta = positionMeta(p.position);
+      const posLabel = meta ? t(`pos_${meta.value}`) : "";
+      return (
         p.full_name.includes(q) ||
-        (p.position?.includes(q) ?? false) ||
-        String(p.jersey_number ?? "").includes(q),
-    );
-  }, [players, query]);
+        posLabel.includes(q) ||
+        String(p.jersey_number ?? "").includes(q)
+      );
+    });
+  }, [players, query, t]);
 
   return (
     <main className="relative mx-auto flex min-h-dvh w-full max-w-2xl flex-col" dir="rtl">
@@ -114,7 +120,7 @@ export function Roster({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.28, ease: EASE, delay: reduce ? 0 : Math.min(i * 0.04, 0.4) }}
               >
-                <PlayerRow player={p} category={category} teamId={teamId} />
+                <PlayerRow player={p} category={category} teamId={teamId} t={t} />
               </motion.li>
             ))}
           </ul>
@@ -127,7 +133,7 @@ export function Roster({
           type="button"
           onClick={() => setSheetOpen(true)}
           aria-label={t("add_player")}
-          className="floodlit floodlit--green fixed bottom-6 start-5 grid h-14 w-14 !rounded-full ring-1 ring-white/20"
+          className="floodlit floodlit--green fixed bottom-28 start-5 z-50 grid h-14 w-14 !rounded-full ring-1 ring-white/20 lg:bottom-6"
           initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={reduce ? { duration: 0.15 } : { ...SPRING, delay: 0.15 }}
@@ -156,46 +162,42 @@ export function Roster({
   );
 }
 
-// Position → a pitch role + its tone. Lets the team sheet be READ positionally
-// at a glance (GK gold, defence blue, mid green, attack red) — information
-// encoded as color, the same green/blue/red club family. Arabic + a few
-// English/Hebrew aliases the coach might type; unknown → neutral blue.
-type Role = { tone: string; soft: string; lit: "blue" | "green" | "gold" | "red" };
-const ROLE_NEUTRAL: Role = { tone: "#2563EB", soft: "#EAF0FB", lit: "blue" };
-function roleOf(position: string | null): Role {
-  if (!position) return ROLE_NEUTRAL;
-  const p = position.toLowerCase();
-  const has = (...xs: string[]) => xs.some((x) => p.includes(x));
-  if (has("حارس", "goal", "gk", "שוער")) return { tone: "#B45309", soft: "#FEF3E2", lit: "gold" };
-  if (has("دفاع", "مدافع", "def", "back", "הגנה")) return { tone: "#2563EB", soft: "#EAF0FB", lit: "blue" };
-  if (has("وسط", "mid", "קישור")) return { tone: "#047857", soft: "#E7F8F0", lit: "green" };
-  if (has("مهاجم", "هجوم", "att", "forward", "striker", "חלוץ")) return { tone: "#C0392B", soft: "#FDECEA", lit: "red" };
-  return ROLE_NEUTRAL;
-}
+// Neutral tile tone for a player with no position set (or a stale pre-enum value).
+const POS_NEUTRAL = { color: "#2563EB", soft: "#EAF0FB", lit: "blue" as const };
 
 function PlayerRow({
   player,
   category,
   teamId,
+  t,
 }: {
   player: Player;
   category: Category;
   teamId: string;
+  t: ReturnType<typeof useTranslations<"players">>;
 }) {
   const hasJersey = player.jersey_number != null;
   const initial = player.full_name.trim().charAt(0);
-  const role = roleOf(player.position);
+  // The 7-position meta drives the tile + chip color; the label is i18n'd from
+  // the enum value. An unset/legacy position falls back to a neutral tile and
+  // renders no chip (no stale string).
+  const meta = positionMeta(player.position);
+  const tone = meta ?? POS_NEUTRAL;
   return (
     <Link
       href={`/players/${category}/${teamId}/${player.id}`}
       className="alive-card relative flex items-center gap-3.5 overflow-hidden p-3"
     >
       {/* position-toned leading edge (RTL start) — the sheet reads by role */}
-      <span aria-hidden className="absolute inset-y-0 start-0 w-[3px]" style={{ background: role.tone }} />
+      <span aria-hidden className="absolute inset-y-0 start-0 w-[3px]" style={{ background: tone.color }} />
 
       {/* floodlit jersey tile — a team sheet leads with the number, lit from
-          above, toned to the player's role. Falls back to the name initial. */}
-      <span className={`floodlit floodlit--${role.lit} grid h-[54px] w-[54px] flex-none`}>
+          above, toned to the player's EXACT position color (all 7 distinct), so
+          scanning the roster reads positions by jersey color. Unset → neutral. */}
+      <span
+        className={`floodlit grid h-[54px] w-[54px] flex-none ${meta ? "floodlit--pos" : "floodlit--blue"}`}
+        style={meta ? ({ "--pos": meta.color } as React.CSSProperties) : undefined}
+      >
         {hasJersey ? (
           <span className="num text-[25px] font-bold leading-none tracking-tight">
             {player.jersey_number}
@@ -207,12 +209,12 @@ function PlayerRow({
 
       <div className="min-w-0 flex-1">
         <div className="truncate text-[15px] font-bold text-[#0B1A2E]">{player.full_name}</div>
-        {player.position && (
+        {meta && (
           <span
             className="mt-1 inline-flex items-center rounded-md px-1.5 py-0.5 text-[10.5px] font-bold"
-            style={{ background: role.soft, color: role.tone }}
+            style={{ background: meta.soft, color: meta.color }}
           >
-            {player.position}
+            {t(`pos_${meta.value}`)}
           </span>
         )}
       </div>

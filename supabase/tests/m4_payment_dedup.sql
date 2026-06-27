@@ -40,7 +40,17 @@ begin
   assert paid = 190.00, format('BALANCE FAIL: expected paid 190.00, got %s', paid);
   assert remaining = -40.00, format('BALANCE FAIL: expected remaining -40.00, got %s', remaining);
 
-  raise notice 'PASS: dedup (1 row) + balance math exact (paid 190.00, remaining -40.00)';
+  -- OVERPAYMENT (Atlas ruling): the payment is STORED IN FULL, never clamped to
+  -- the due — losing the coach's cash would be a silent-failure. So sum>due is a
+  -- real, queryable state here (paid 190 > due 150 → a 40 surplus). The TS layer
+  -- turns that surplus into an explicit `credit = max(0, paid-due)` + an
+  -- `overpaid` status (remaining floored at 0 for the UI); that derivation is
+  -- TS-only (deriveBalance) and can't run in SQL — this asserts the DB half:
+  -- the surplus is preserved, not clamped.
+  assert paid > 150, format('OVERPAY FAIL: expected stored sum > due (not clamped), got %s', paid);
+  assert (paid - 150) = 40.00, format('OVERPAY FAIL: expected 40.00 surplus, got %s', paid - 150);
+
+  raise notice 'PASS: dedup (1 row) + balance math exact + overpayment stored in full (surplus 40.00)';
   raise exception 'rollback_marker';
 exception when others then
   if sqlerrm = 'rollback_marker' then raise notice 'rolled back';

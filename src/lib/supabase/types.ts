@@ -162,6 +162,7 @@ export type Database = {
       payments: {
         Row: {
           amount: number
+          cheque_number: string | null
           client_id: string
           created_at: string
           due_id: string
@@ -169,9 +170,11 @@ export type Database = {
           method: Database["public"]["Enums"]["payment_method"]
           paid_at: string
           recorded_by: string | null
+          status: Database["public"]["Enums"]["payment_status"]
         }
         Insert: {
           amount: number
+          cheque_number?: string | null
           client_id: string
           created_at?: string
           due_id: string
@@ -179,9 +182,11 @@ export type Database = {
           method: Database["public"]["Enums"]["payment_method"]
           paid_at?: string
           recorded_by?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
         }
         Update: {
           amount?: number
+          cheque_number?: string | null
           client_id?: string
           created_at?: string
           due_id?: string
@@ -189,6 +194,7 @@ export type Database = {
           method?: Database["public"]["Enums"]["payment_method"]
           paid_at?: string
           recorded_by?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
         }
         Relationships: [
           {
@@ -368,7 +374,8 @@ export type Database = {
     Enums: {
       attendance_status: "present" | "late" | "absent"
       event_type: "training" | "match"
-      payment_method: "cash" | "transfer"
+      payment_method: "cash" | "transfer" | "cheque"
+      payment_status: "pending" | "cleared" | "bounced"
       player_category: "beet_sefer" | "league" | "bogrim"
       user_role: "coach" | "owner" | "parent"
     }
@@ -500,7 +507,8 @@ export const Constants = {
     Enums: {
       attendance_status: ["present", "late", "absent"],
       event_type: ["training", "match"],
-      payment_method: ["cash", "transfer"],
+      payment_method: ["cash", "transfer", "cheque"],
+      payment_status: ["pending", "cleared", "bounced"],
       player_category: ["beet_sefer", "league", "bogrim"],
       user_role: ["coach", "owner", "parent"],
     },

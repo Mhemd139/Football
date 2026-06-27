@@ -20,9 +20,10 @@ export default function MoneyLoading() {
           <div className="h-11 w-11 rounded-xl bg-white/[0.18] ring-1 ring-white/[0.26]" />
         </div>
 
-        {/* glass segmented tabs */}
+        {/* glass segmented tabs (dues · salaries · ledger) */}
         <div className="mt-4 flex gap-1.5 rounded-2xl bg-white/[0.12] p-1 ring-1 ring-white/[0.18]">
           <div className="h-9 flex-1 rounded-xl bg-white/80" />
+          <div className="h-9 flex-1 rounded-xl bg-white/15" />
           <div className="h-9 flex-1 rounded-xl bg-white/15" />
         </div>
       </header>

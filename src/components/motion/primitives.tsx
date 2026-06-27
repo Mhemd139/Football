@@ -2,6 +2,17 @@
 
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useEffect, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+
+// Render into <body>, escaping every ancestor stacking context (a parent
+// transform / filter / isolation would otherwise trap a fixed z-50 overlay
+// *inside* the card, letting floodlit tiles paint over the scrim). A sheet only
+// ever mounts on a client interaction, so document.body is always present here;
+// guard for SSR safety and render nothing server-side.
+function Portal({ children }: { children: ReactNode }) {
+  if (typeof document === "undefined") return null;
+  return createPortal(children, document.body);
+}
 
 // Keep keyboard + screen-reader focus inside an open modal, then give it back.
 // On mount: remember what was focused, move focus to the first focusable inside
@@ -77,35 +88,37 @@ export function BottomSheet({
   const reduce = useReducedMotion();
   const trapRef = useFocusTrap<HTMLDivElement>(onClose);
   return (
-    <div
-      ref={trapRef}
-      tabIndex={-1}
-      className="fixed inset-0 z-50 flex flex-col justify-end outline-none"
-      role="dialog"
-      aria-modal="true"
-      aria-label={label}
-    >
-      <motion.button
-        type="button"
+    <Portal>
+      <div
+        ref={trapRef}
         tabIndex={-1}
+        className="fixed inset-0 z-50 flex flex-col justify-end outline-none"
+        role="dialog"
+        aria-modal="true"
         aria-label={label}
-        onClick={onClose}
-        className="absolute inset-0 bg-[#0B1A2E]/45"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={reduce ? { duration: 0 } : { duration: 0.22, ease: EASE }}
-      />
-      <motion.div
-        initial={reduce ? { opacity: 0 } : { y: "100%" }}
-        animate={reduce ? { opacity: 1 } : { y: 0 }}
-        exit={reduce ? { opacity: 0 } : { y: "100%" }}
-        transition={reduce ? { duration: 0.15 } : SPRING}
-        className="relative"
       >
-        {children}
-      </motion.div>
-    </div>
+        <motion.button
+          type="button"
+          tabIndex={-1}
+          aria-label={label}
+          onClick={onClose}
+          className="absolute inset-0 bg-[#0B1A2E]/45"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={reduce ? { duration: 0 } : { duration: 0.22, ease: EASE }}
+        />
+        <motion.div
+          initial={reduce ? { opacity: 0 } : { y: "100%" }}
+          animate={reduce ? { opacity: 1 } : { y: 0 }}
+          exit={reduce ? { opacity: 0 } : { y: "100%" }}
+          transition={reduce ? { duration: 0.15 } : SPRING}
+          className="relative"
+        >
+          {children}
+        </motion.div>
+      </div>
+    </Portal>
   );
 }
 
@@ -122,6 +135,7 @@ export function CenterDialog({
   const reduce = useReducedMotion();
   const trapRef = useFocusTrap<HTMLDivElement>(onClose);
   return (
+    <Portal>
     <div
       ref={trapRef}
       tabIndex={-1}
@@ -151,6 +165,7 @@ export function CenterDialog({
         {children}
       </motion.div>
     </div>
+    </Portal>
   );
 }
 

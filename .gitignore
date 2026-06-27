@@ -54,6 +54,11 @@ next-env.d.ts
 # cross-agent coordination log (local only, not project source)
 /Playground.md
 
+# per-agent identity / onboarding / playbook prompts (local, not project source)
+/marker-plan.md
+/security-agent.md
+/PITCH-LAUNCH.md
+
 # design handoff archive (binary, not source)
 /Design beautification for coaching app.zip
 
