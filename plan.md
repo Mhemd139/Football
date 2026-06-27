@@ -480,6 +480,90 @@ inserts rejected).
 
 ---
 
+## M4.5 — Money completion (transaction ledger + cheque lifecycle + document attach)
+*Goal: the owner can see and search every payment logged, record a cheque and mark it bounced (which reopens the dues balance), and attach a scan/photo to a transaction — closing the gap between the lean cash/transfer model and how the club actually handles money.*
+
+> PM AMENDMENT 2026-06-27 (Atlas, owner-directed): M4 shipped the contracted money model (cash|transfer
+> logging + balances + overdue) and is complete *as contracted*. But the owner confirmed the club runs on
+> **cheques that bounce**, and needs a **coach/owner transaction ledger** (M4 gave payment history only to
+> the *parent*, never the coach). Neither cheques, bounce status, nor document attachment existed anywhere
+> in the original plan — the plan **under-scoped money**. This milestone closes that. **Locked decisions:**
+> (1) money stays `player_id`/`due_id`-keyed (unchanged). (2) The three pieces are **dependency-ordered** —
+> ledger first (it's the surface the other two hang off), then cheque lifecycle, then document attach.
+> (3) A bounced cheque is NOT a deletion: the payment row persists with `status=bounced` and the linked
+> due **reopens** (balance recomputes to overdue/partial) — derived at read-time, never stored, same as
+> every money status. (4) Sequenced **after M4's Human Test Gate, before M5** — Home surfaces money and
+> should sit on the complete model. (5) **The cheque number is the primary reconciliation key.** When a
+> cheque bounces, the bank returns it with only a *number* — no name. So `cheque_number` is **required**
+> when method = cheque, indexed, and searchable; the owner recovers *who gave the cheque* by punching that
+> number into the ledger. Search-by-player is the secondary path; search-by-cheque-number is the one the
+> bounce workflow actually depends on.
+
+### 🛡️ Sweeper
+- [ ] **`listPayments({ period?, playerId?, chequeNumber? })`** — bounded, ordered transaction list
+      (who, amount, method, status, cheque #, when). Reads existing `payments` data; no new storage.
+      `chequeNumber` matches exactly (the bounce-lookup path, below). This is the ledger's source.
+- [ ] **Cheque method + number + status:** add `cheque` to the `method` enum; add a `cheque_number`
+      column (text, **required when method = cheque**, indexed — it's the search key, see amendment);
+      add a payment `status` `pending | cleared | bounced` (the current model has no payment status).
+      Cash/transfer default to `cleared` and carry no cheque number; a cheque starts `pending`.
+- [ ] **`findPaymentByChequeNumber(chequeNumber)`** — resolves a (bounced) cheque number back to its
+      payment → player → due. This is the PRIMARY way a bounce is reconciled: the bank returns a cheque
+      with only a number on it, and the owner must recover *who gave it* from that number alone.
+- [ ] **Bounce lifecycle:** `markChequeBounced(paymentId)` sets `status=bounced`; the linked due's
+      balance **reopens** — `remaining`/`status` recompute as if the payment never cleared, but the
+      bounced payment row **stays visible** (the owner must see whose cheque bounced, to chase it).
+      Derived at read-time (no stored balance to drift). **Highest-consequence logic in this milestone —
+      a silent bug = "paid" hiding a bounce = lost money. Strong ultracode candidate.**
+- [ ] **Document storage:** a Supabase Storage bucket for transaction attachments, **RLS owner/coach
+      only — never parent** (financial docs, privacy-first default-deny). `attachDocument(paymentId, file)`
+      + the read path for viewing it. Optional per payment (cash needs none; a cheque should have one).
+- [ ] **Tests:** cheque number is required for cheque method + resolves back to the right player;
+      bounce reopens the due (balance flips back, payment stays visible); ledger query is
+      bounded + RLS-scoped; storage RLS denies parent.
+
+**Interfaces produced:** `listPayments(filter)`, `findPaymentByChequeNumber(chequeNumber)`,
+`markChequeBounced(paymentId)`, `attachDocument(paymentId, file)` + document read path. `recordPayment`
+extended for `cheque` method (carries the required cheque number).
+
+### 🧵 Loom
+- [ ] **Transaction ledger view** (coach/owner) — searchable by **cheque number** (primary) and
+      filterable by player + period; each row shows amount, method, status (color + label), cheque #
+      (for cheques), date, and a doc indicator if attached.
+- [ ] **Cheque flow:** record-payment sheet gains `cheque` as a method **with a required cheque-number
+      field**; a cheque row in the ledger offers **"mark bounced"** → confirms → the linked due visibly
+      reopens. **Bounce-reconciliation path:** owner types the bounced cheque's number into search → the
+      single matching payment surfaces, showing the player who gave it → mark bounced from there.
+- [ ] **Document attach:** capture/upload a photo or file against a payment (camera + file picker);
+      view the attached image from the ledger row. Optional, never required.
+- [ ] Bounced status uses a distinct, unambiguous treatment (NOT reused with overdue-red alone —
+      color + label, "ارتد / bounced") so a bounced cheque never reads as a normal unpaid row.
+
+### 🧭 Atlas
+- [ ] **Scope guard:** the ledger is a *view*, not a second place to edit money — recording still happens
+      via the 2-tap sheet (don't split the payment-entry path). Bounce + attach are the only new write
+      actions. Confirm money states stay unambiguous (product-context:104) once `bounced` + `cheque` join
+      the status set. **Cheque number renders mono + LTR** (it's a numeral, same rule as money). AR/HE
+      copy for the new keys (`method_cheque`, `cheque_number`, `status_pending/cleared/bounced`, ledger
+      labels). Acceptance.
+
+**Acceptance checklist:** owner opens a list of every payment searchable **by cheque number** ·
+records a cheque (requires a cheque number, starts pending) · **types a bounced cheque's number → the
+payment + the player who gave it surface** · marks it bounced → the player's due **reopens** (balance
+climbs back, status returns to overdue/partial) and the bounced cheque stays visible · attaches a photo
+to a transaction and views it · parent **cannot** reach the ledger or the documents · numerals + cheque #
+mono + LTR; statuses color + label.
+
+**🧪 Human Test Gate:** Owner logs a cheque (entering its number), then — simulating a bank rejection —
+**searches the ledger by that cheque number alone, with no idea whose it is, and the app surfaces the
+player who gave it**; marks it bounced, confirms the balance reopened and the bounced cheque is still
+listed with the player's name; attaches a cheque photo and reopens it. Sweeper shows the
+cheque-number-resolves-to-player test + the bounce-reopens-due test + the parent-denied storage RLS test passing.
+
+**PM Checkpoint.**
+
+---
+
 ## M5 — Home (morning open) + needs-attention
 *Goal: the coach opens the app and instantly sees the day and what needs attention — one tap into each. (All its data — events, dues, unsynced attendance — now exists from M3/M4.)*
 
@@ -521,11 +605,12 @@ attention card and lands exactly where the work is.
 - [ ] `getPlayerAnalytics(id)` aggregations: performance bars (from ratings), **6-session rating
       trend** (from ratings), season stats, **attendance ring** (from M3), upcoming events, dues
       status (from M4) — all bounded.
-- [ ] Admin: `inviteMember(phone|email, role)`, `assignRole`, `setCategoryVisibility`,
-      `removeMember` (**preserves historical records**).
+- [ ] Admin: `setCategoryVisibility`, `removeMember` (**preserves historical records**).
+      *(Member PROVISIONING — who may sign in and as what — moved to M6.5; it's an auth invariant,
+      not a settings convenience. M6 Admin keeps only the post-provisioning controls.)*
 
 **Interfaces produced:** `listEvents(range)`, `ratePlayer(...)`, `getPlayerAnalytics(id)`,
-`inviteMember(...)`, `assignRole(...)`, `setCategoryVisibility(...)`, `removeMember(id)`.
+`setCategoryVisibility(...)`, `removeMember(id)`.
 
 ### 🧵 Loom
 - [ ] **Calendar tab:** month/week of events, tap an event → its attendance (links to M3).
@@ -533,20 +618,114 @@ attention card and lands exactly where the work is.
       performance for a player (from the player profile or post-session) — chips/sliders, no-think.
 - [ ] **Player analytics profile:** performance bars, 6-session trend chart, season stats,
       attendance ring, upcoming team events, dues status — clean, scannable, mono numerics.
-- [ ] **Admin:** invite-member **modal**, assign-role **sheet**, remove-member **confirm modal**
-      (modals only because these are one-time/destructive). Category-visibility toggles.
+- [ ] **Admin:** category-visibility toggles + remove-member **confirm modal** (destructive).
+      *(Add-member / assign-role UI lives in M6.5.)*
 
 ### 🧭 Atlas
 - [ ] Confirm ratings stay lightweight (not a chore that fights the calm tool). Modals reserved for
       destructive/one-time only. Acceptance.
 
 **Acceptance checklist:** create/see events on the calendar · **coach can log a rating, and it
-shows up in that player's trend** · analytics profile renders real data · invite → assign role →
-member appears · remove member preserves history.
+shows up in that player's trend** · analytics profile renders real data · remove member preserves
+history · category visibility toggles work.
 
 **🧪 Human Test Gate:** Owner schedules an event, logs a couple of ratings for a player, opens that
-player's analytics and sees the trend move, invites a member, assigns a role, removes one (history
-intact).
+player's analytics and sees the trend move, removes a member (history intact), toggles a coach's
+category visibility.
+
+**PM Checkpoint.**
+
+---
+
+## M6.5 — Member provisioning & access control (the owner is the gate)
+*Goal: NObody reaches the app without the owner first adding their phone and choosing their role. Authority is granted by the owner, never claimed by signing in. This is the security spine the whole multi-user model — and the M7 parent view — stands on.*
+
+> PM AMENDMENT 2026-06-28 (Atlas, owner-directed): the plan assumed `inviteMember` handled enrollment,
+> but the shipped auth does the OPPOSITE — `profiles.role` defaults to **`coach`** (`0001`:7) and
+> `set_first_owner` only special-cases the FIRST phone, so **every phone after the first is born a full
+> coach** with no owner approval (open-enrollment by arrival order). That's a club-data breach the moment
+> the app is reachable outside the owner's circle. **Owner ruling: only owner-provisioned phones may sign
+> in, with the role the owner set.** This pulls member-provisioning out of M6's grab-bag into its own
+> milestone because it is an **auth invariant**, not a settings screen, and M7 (parent) depends on it.
+>
+> **OWNER UPDATE 2026-06-28: the first owner is SEEDED in a migration, not hand-edited in the DB.** Owner:
+> *"Muhammad 0587131002 is the first owner — that way I add whoever I want using the UI instead of
+> manually in the DB, which is dumb."* So a one-line migration inserts `+972587131002` as the single
+> owner allow-list entry; it runs automatically on deploy, the owner never touches the DB, signs in by
+> OTP and lands as owner, then provisions everyone else in-app. This keeps the rule absolute: **no account
+> is EVER born with a role by arriving — the first owner is a pre-seeded allow-list row (in code, written
+> once), every account after is provisioned by the owner through the UI.** `set_first_owner` is therefore
+> **deleted, not kept** (auto-owner-by-first-arrival is the same arrival-order bug as the coach default;
+> seeding the known owner phone closes it for good — no stranger can claim owner by signing in first).
+>
+> **Locked decisions:** (1) **No auto-role bootstrap.** Drop the `set_first_owner` trigger; the first
+> owner is a **seeded allow-list row** (`+972587131002`, role `owner`) in a migration — not hand-edited,
+> not arrival-based. (2) Every phone must be on the **owner-written allow-list** (phone + role) BEFORE
+> sign-in; an un-listed phone gets **no OTP success, no profile, no role**. (3) The `role default 'coach'`
+> is removed — a profile's role comes from its allow-list entry, never a column default; a
+> roleless/defaulted profile is impossible. (4) The allow-list write is **owner-only**, server-enforced
+> (`current_role() = 'owner'`). (5) Sequenced **before M7** — a parent is just an owner-provisioned phone
+> with `role=parent`; the parent view can't be safe until this lands.
+
+### 🛡️ Sweeper
+- [ ] **Allow-list table** (`provisioned_members` or similar): `phone`, `role` (`coach|owner|parent`),
+      optional `full_name`, optional `player_id` (for parent→child linking, feeds M7), `created_by`
+      (the owner), `claimed_at` (null until that phone first signs in). **Owner-only RLS** — only
+      `current_role() = 'owner'` may read/write it.
+- [ ] **Gate sign-in on the allow-list:** rework `handle_new_user` (`0003`) so a profile is created
+      **only** for a phone present in the allow-list, stamped with **that entry's role** (not a default).
+      An un-provisioned phone → **no profile, sign-in fails closed.** No bootstrap exception — the first
+      owner is provisioned by hand (see below), so the allow-list is the single gate for everyone.
+- [ ] **Drop `set_first_owner`** (`0001`:20 trigger) — auto-owner-by-first-arrival is the same
+      arrival-order hole as the coach default. The first owner is set MANUALLY by the human owner
+      (DB/console); no code path assigns owner automatically. *(The `profiles_one_owner` partial unique
+      index stays — it still guarantees at most one owner.)*
+- [ ] **Remove the `role` column default** (`0001`:7 `default 'coach'`) — role is always set explicitly
+      from the allow-list at creation or by the owner via `assignRole`; a roleless/defaulted profile must
+      be impossible.
+- [ ] **Owner provisioning actions:** `addMember({ phone, role, fullName?, playerId? })`,
+      `assignRole(profileId|phone, role)`, `revokeMember(phone)` — all **owner-only, server-gated**,
+      `phone`/`role`/`player_id` never accepted from a non-owner caller (mass-assignment guard).
+- [ ] **Design note + migration flag** — this reverses a shipped default and changes enrollment; write
+      the design note, flag the migration like every schema change, apply on owner-go. Coordinate with
+      Marker (he re-verifies). **Strong ULTRACODE candidate** — auth/authority correctness, the exact
+      "silent bug = unauthorized access" trigger.
+
+**Interfaces produced:** `addMember(...)`, `assignRole(...)`, `revokeMember(phone)`,
+`listProvisionedMembers()` (owner-scoped). Sign-in path now allow-list-gated.
+
+### 🧵 Loom
+- [ ] **"Add member" flow (owner only) — the provisioning surface.** Owner enters a **phone number**
+      (the primary key of access; phone-OTP app, NOT email) → picks a **role** (coach / parent / owner)
+      → optional name → for a parent, picks the linked child. This IS the allow-list write. A **bottom
+      sheet** (routine create), not a modal.
+- [ ] **Members list (owner only):** every provisioned phone with its role + a **状态** chip —
+      **"بانتظار أول دخول / pending first sign-in"** (allow-listed, never signed in → `claimed_at` null)
+      vs **"نشِط / active"** (has signed in). So the owner sees who's been added vs who's actually in.
+- [ ] **Assign-role / revoke** from a member row — **assign-role sheet**; **revoke = confirm modal**
+      (destructive: it cuts off access). Revoke preserves history (same rule as `removeMember`).
+- [ ] **Honest empty/blocked states:** a phone not yet provisioned that tries to sign in sees a calm
+      **"تواصل مع إدارة النادي لإضافتك / contact the club to be added"** — never a raw auth error, never
+      a silent dead end (no-silent-failure rule).
+
+### 🧭 Atlas
+- [ ] **Scope guard:** provisioning is **owner-only** — coaches never see it (it's the authority gate).
+      The "add member" path is the ONLY way anyone enters; confirm there is **no self-signup anywhere**
+      in the app (no public "create account"). Phone is the access key (no email field — the app is
+      phone-OTP). AR/HE copy: `members.add`, `members.role_coach/owner/parent`, `members.pending`,
+      `members.active`, `members.revoke_confirm`, the not-provisioned sign-in block message. Acceptance.
+
+**Acceptance checklist:** the first owner (provisioned manually) can sign in and add members · owner
+adds a phone + role → that phone (and ONLY that phone) can complete OTP and lands in exactly that role
+· a phone the owner did NOT add **cannot sign in** (no profile, no access) · a newly-added member shows
+"pending first sign-in" until they sign in, then "active" · owner can change a member's role and revoke
+access (history preserved) · **no account is ever auto-assigned a role by arriving** · no self-signup
+path exists anywhere.
+
+**🧪 Human Test Gate:** Owner adds a coach's phone → that coach signs in and lands as coach. A phone
+NOT added by the owner attempts OTP and **is refused** (sees the "contact the club" message, gets no
+account). Owner revokes the coach → that coach can no longer reach club data. Marker shows the
+"un-provisioned phone cannot acquire any role" negative test (real wrong-user JWT) passing.
 
 **PM Checkpoint.**
 
