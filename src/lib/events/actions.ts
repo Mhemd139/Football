@@ -167,13 +167,23 @@ export async function getEvent(id: string): Promise<Result<EventWithTeam>> {
 
 // ── Attendance ─────────────────────────────────────────────────────────────
 
-// The roster to mark for an event: the event's team players + their existing
-// mark for this event (if any). One query each, run in parallel.
+// The roster for an event: the active team players + ANY player who already has
+// a mark for this event, with that mark (if any). `historical` flags a player who
+// is on the roster ONLY because they have a saved mark — i.e. they're no longer
+// an active member of the team (deactivated since), kept so a past event's
+// breakdown reconciles against what was actually saved.
+//
+// Why a union, not two functions: a NEW session has no marks, so the union is
+// exactly the active roster (live take-attendance, unchanged). A PAST event
+// surfaces every marked player, active or not — an attendance record is a
+// point-in-time fact; deactivating a player later doesn't un-happen it (Atlas
+// ruling). One read serves both with no caller decision.
 type RosterPlayer = {
   player_id: string;
   full_name: string;
   jersey_number: number | null;
   status: AttendanceStatus | null;
+  historical: boolean;
 };
 
 export async function getEventRoster(
@@ -191,37 +201,73 @@ export async function getEventRoster(
     return { ok: false, error: "events.load_failed" };
   }
 
-  const [players, marks] = await Promise.all([
+  const [active, marks] = await Promise.all([
     supabase
       .from("players")
       .select("id, full_name, jersey_number")
       .eq("team_id", event.team_id)
-      .eq("active", true)
-      .order("jersey_number", { ascending: true, nullsFirst: false })
-      .order("full_name", { ascending: true }),
+      .eq("active", true),
     supabase
       .from("attendance")
       .select("player_id, status")
       .eq("event_id", eventId),
   ]);
 
-  if (players.error || marks.error) {
-    console.error("getEventRoster failed:", players.error ?? marks.error);
+  if (active.error || marks.error) {
+    console.error("getEventRoster failed:", active.error ?? marks.error);
     return { ok: false, error: "attendance.load_failed" };
   }
 
   const byPlayer = new Map<string, AttendanceStatus>();
   for (const m of marks.data) byPlayer.set(m.player_id, m.status);
 
-  return {
-    ok: true,
-    data: players.data.map((p) => ({
+  // Any marked player NOT in the active set is a historical member (deactivated
+  // since they were marked). Fetch only those, so the past event reconciles.
+  const activeIds = new Set(active.data.map((p) => p.id));
+  const missingIds = [...byPlayer.keys()].filter((id) => !activeIds.has(id));
+
+  let historical: { id: string; full_name: string; jersey_number: number | null }[] = [];
+  if (missingIds.length > 0) {
+    const { data, error } = await supabase
+      .from("players")
+      .select("id, full_name, jersey_number")
+      .in("id", missingIds);
+    if (error) {
+      console.error("getEventRoster (historical) failed:", error);
+      return { ok: false, error: "attendance.load_failed" };
+    }
+    historical = data;
+  }
+
+  const rows: RosterPlayer[] = [
+    ...active.data.map((p) => ({
       player_id: p.id,
       full_name: p.full_name,
       jersey_number: p.jersey_number,
       status: byPlayer.get(p.id) ?? null,
+      historical: false,
     })),
-  };
+    ...historical.map((p) => ({
+      player_id: p.id,
+      full_name: p.full_name,
+      jersey_number: p.jersey_number,
+      status: byPlayer.get(p.id) ?? null,
+      historical: true,
+    })),
+  ];
+
+  // Sort once over the merged set (was DB-side; now in JS since two sources
+  // merge): jersey number ascending, nulls last, then name.
+  rows.sort((a, b) => {
+    if (a.jersey_number !== b.jersey_number) {
+      if (a.jersey_number == null) return 1;
+      if (b.jersey_number == null) return -1;
+      return a.jersey_number - b.jersey_number;
+    }
+    return a.full_name.localeCompare(b.full_name);
+  });
+
+  return { ok: true, data: rows };
 }
 
 // Save a roster's marks. Upsert on client_id so a re-save (or an offline replay)

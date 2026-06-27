@@ -42,6 +42,7 @@ export default async function MoneyPage() {
         amount: d.amount_due,
         paid: d.paid,
         remaining: d.remaining,
+        credit: d.credit,
         status: d.status,
       }))
     : [];
@@ -56,6 +57,7 @@ export default async function MoneyPage() {
         amount: s.amount,
         paid: s.paid_at ? s.amount : 0,
         remaining: s.paid_at ? 0 : s.amount,
+        credit: 0, // salaries settle via paid_at — no overpayment path
         status: s.paid_at ? "paid" : "upcoming",
       }))
     : [];

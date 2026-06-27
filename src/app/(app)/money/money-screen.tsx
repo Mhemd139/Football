@@ -32,6 +32,9 @@ export type DueRow = {
   amount: number;
   paid: number;
   remaining: number;
+  // Surplus when the coach overpaid (cash-at-pitch). Shown explicitly as a credit
+  // line — never a bare negative remaining (Atlas ruling, product-context:104).
+  credit: number;
   status: DueStatus;
 };
 
@@ -42,7 +45,7 @@ type Tab = "dues" | "salaries";
 type Filter = "all" | DueStatus;
 
 // The fields a recorded payment recomputes — overlaid onto a due row optimistically.
-type Balance = { paid: number; remaining: number; status: DueStatus };
+type Balance = { paid: number; remaining: number; credit: number; status: DueStatus };
 
 const FILTERS: Filter[] = ["all", "overdue", "partial", "upcoming", "paid"];
 
@@ -59,6 +62,10 @@ const PILL: Record<
   partial: { bg: "#FEF3E2", fg: "#B45309", dot: "#F59E0B", lit: "gold" },
   overdue: { bg: "#FDECEA", fg: "#C0392B", dot: "#EF4444", lit: "red" },
   upcoming: { bg: "#EAF0FB", fg: "#2563EB", dot: "#60A5FA", lit: "blue" },
+  // Overpaid = paid + a credit (Atlas ruling). Paid-green FAMILY so it reads as
+  // settled, but a deeper teal (not the plain-paid mint) + its own label + an
+  // explicit credit line make it unmistakable from a plain `paid` at a glance.
+  overpaid: { bg: "#D7F1EA", fg: "#0F6E5A", dot: "#0D9488", lit: "green" },
 };
 
 // Western numerals even in the Arabic UI, with thousands grouping — the club
@@ -116,6 +123,7 @@ export function MoneyScreen({
     method: PaymentMethod;
     paid: number;
     remaining: number;
+    credit: number;
     offline: boolean;
   } | null>(null);
   const [genMsg, setGenMsg] = useState<string | null>(null);
@@ -192,6 +200,7 @@ export function MoneyScreen({
         [row.id]: {
           paid: res.data.paid,
           remaining: res.data.remaining,
+          credit: res.data.credit,
           status: res.data.status,
         },
       }));
@@ -200,6 +209,7 @@ export function MoneyScreen({
         method,
         paid: res.data.paid,
         remaining: res.data.remaining,
+        credit: res.data.credit,
         offline: false,
       });
     },
@@ -428,8 +438,17 @@ function MoneyRow({
           <span className="h-1.5 w-1.5 rounded-full" style={{ background: pill.dot }} aria-hidden="true" />
           {t(`status_${row.status}`)}
         </span>
-        <span className="text-[12.5px] font-bold" style={{ color: paidInFull ? "#047857" : row.status === "overdue" ? "#C0392B" : "#0B1A2E" }}>
-          {paidInFull ? (
+        <span
+          className="text-[12.5px] font-bold"
+          style={{ color: row.status === "overpaid" ? "#0F6E5A" : paidInFull ? "#047857" : row.status === "overdue" ? "#C0392B" : "#0B1A2E" }}
+        >
+          {row.status === "overpaid" ? (
+            // Credit, not a bare negative — Atlas ruling: paid AND the surplus shown.
+            <>
+              <span className="me-1 text-[9px] font-semibold text-[#0F6E5A]/70">{t("credit_label")}</span>
+              <span className="num">{fmt(row.credit)}</span> {t("currency")}
+            </>
+          ) : paidInFull ? (
             t("paid_in_full")
           ) : (
             <>
@@ -613,10 +632,11 @@ function SuccessOverlay({
   onDone,
   t,
 }: {
-  data: { name: string; method: PaymentMethod; paid: number; remaining: number; offline: boolean };
+  data: { name: string; method: PaymentMethod; paid: number; remaining: number; credit: number; offline: boolean };
   onDone: () => void;
   t: ReturnType<typeof useTranslations<"money">>;
 }) {
+  const overpaid = data.credit > 0;
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center px-8 text-center"
@@ -639,11 +659,16 @@ function SuccessOverlay({
       )}
       <div className="mt-5 flex gap-2.5">
         <SuccessStat n={data.paid} label={t("success_paid")} color="#047857" />
-        <SuccessStat
-          n={data.remaining}
-          label={t("success_remaining")}
-          color={data.remaining === 0 ? "#047857" : "#C0392B"}
-        />
+        {overpaid ? (
+          // Overpaid → the second stat is the explicit credit, not a 0 remaining.
+          <SuccessStat n={data.credit} label={t("credit_label")} color="#0F6E5A" />
+        ) : (
+          <SuccessStat
+            n={data.remaining}
+            label={t("success_remaining")}
+            color={data.remaining === 0 ? "#047857" : "#C0392B"}
+          />
+        )}
       </div>
       <button
         type="button"

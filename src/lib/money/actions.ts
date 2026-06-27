@@ -6,7 +6,7 @@ import type { Tables, Enums } from "@/lib/supabase/types";
 export type Due = Omit<Tables<"dues">, "created_at">;
 export type Salary = Omit<Tables<"salaries">, "created_at">;
 export type PaymentMethod = Enums<"payment_method">;
-export type DueStatus = "paid" | "partial" | "overdue" | "upcoming";
+export type DueStatus = "paid" | "partial" | "overdue" | "upcoming" | "overpaid";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -22,8 +22,16 @@ const SALARY_COLUMNS = "id, player_id, period, amount, paid_at";
 const PLAYER_EMBED = "player:players!inner(full_name, jersey_number)";
 
 // A balance is amount_due minus the sum of its payments; status is derived, never
-// stored (it would drift on every payment and at every midnight).
-type Balance = { due: number; paid: number; remaining: number; status: DueStatus };
+// stored (it would drift on every payment and at every midnight). `credit` is the
+// surplus when a coach overpaid (cash-at-pitch reality) — kept explicit so the
+// money screen never shows the ambiguous "paid" + negative-remaining combo.
+type Balance = {
+  due: number;
+  paid: number;
+  remaining: number;
+  credit: number;
+  status: DueStatus;
+};
 
 // Coerce a money value to a number at the read boundary. PostgREST may serialize
 // numeric as a string to preserve precision; the generated types say `number`.
@@ -32,8 +40,23 @@ type Balance = { due: number; paid: number; remaining: number; status: DueStatus
 const money = (v: number | string): number =>
   Math.round(Number(v) * 100) / 100;
 
+// Derive the balance shape from due + paid + due date. One source of truth so the
+// per-row and list reads can't drift. `remaining` is floored at 0 (never a bare
+// negative — that's the ambiguous money state product-context forbids); the
+// surplus surfaces as `credit` with its own `overpaid` status instead.
+function deriveBalance(
+  due: number,
+  paid: number,
+  dueDate: string,
+): { remaining: number; credit: number; status: DueStatus } {
+  const credit = money(Math.max(0, paid - due));
+  const remaining = money(Math.max(0, due - paid));
+  return { remaining, credit, status: deriveStatus(due, paid, dueDate) };
+}
+
 function deriveStatus(amountDue: number, paid: number, dueDate: string): DueStatus {
-  if (paid >= amountDue) return "paid";
+  if (paid > amountDue) return "overpaid";
+  if (paid >= amountDue) return "paid"; // exact (paid === due, includes 0-due case)
   if (paid > 0) return "partial";
   // unpaid: overdue once the due date has passed, otherwise still upcoming.
   return isPastDue(dueDate) ? "overdue" : "upcoming";
@@ -183,7 +206,10 @@ export async function getPlayerBalance(
   }
   // No dues generated for this player/period yet — a real zero balance, not an error.
   if (!due) {
-    return { ok: true, data: { due: 0, paid: 0, remaining: 0, status: "upcoming" } };
+    return {
+      ok: true,
+      data: { due: 0, paid: 0, remaining: 0, credit: 0, status: "upcoming" },
+    };
   }
   return balanceForDue(supabase, due.id);
 }
@@ -191,6 +217,7 @@ export async function getPlayerBalance(
 export type DueWithStatus = Due & {
   paid: number;
   remaining: number;
+  credit: number;
   status: DueStatus;
   player: PlayerRef;
 };
@@ -206,8 +233,7 @@ function toDueWithStatus(d: RawDueRow): DueWithStatus {
     ...rest,
     amount_due: due,
     paid,
-    remaining: money(due - paid),
-    status: deriveStatus(due, paid, d.due_date),
+    ...deriveBalance(due, paid, d.due_date),
   };
 }
 
@@ -323,12 +349,7 @@ async function balanceForDue(
   const paid = sumPayments(data.payments);
   return {
     ok: true,
-    data: {
-      due,
-      paid,
-      remaining: money(due - paid),
-      status: deriveStatus(due, paid, data.due_date),
-    },
+    data: { due, paid, ...deriveBalance(due, paid, data.due_date) },
   };
 }
 
