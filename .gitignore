@@ -56,3 +56,6 @@ next-env.d.ts
 
 # design handoff archive (binary, not source)
 /Design beautification for coaching app.zip
+
+# Sentry Config File
+.env.sentry-build-plugin

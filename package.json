@@ -9,7 +9,8 @@
     "eslint-config-next": "^16.2.9",
     "shadcn": "^4.11.0",
     "tailwindcss": "^4.3.1",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
   },
   "name": "tfc-manager",
   "private": "true",
@@ -17,9 +18,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.62.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.108.2",
     "lottie-react": "^2.4.1",
