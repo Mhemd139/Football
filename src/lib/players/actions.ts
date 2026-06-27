@@ -11,7 +11,7 @@ export type Category = Enums<"player_category">;
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 const PLAYER_COLUMNS =
-  "id, team_id, full_name, national_id, birthdate, jersey_number, position, height_cm, guardian_name, guardian_phone, monthly_salary, active";
+  "id, team_id, full_name, national_id, birthdate, jersey_number, position, height_cm, guardian_phone, monthly_salary, active";
 const TEAM_COLUMNS = "id, category, name, active";
 
 // Fields a coach may set/edit on a player. Server owns id/active/timestamps;
@@ -24,7 +24,6 @@ type PlayerInput = {
   jersey_number?: number | null;
   position?: string | null;
   height_cm?: number | null;
-  guardian_name?: string | null;
   guardian_phone?: string | null;
 };
 
@@ -203,7 +202,6 @@ function sanitize(input: PlayerInput): TablesInsert<"players"> | null {
     jersey_number: num(input.jersey_number),
     position: input.position?.trim() || null,
     height_cm: num(input.height_cm),
-    guardian_name: input.guardian_name?.trim() || null,
     guardian_phone: input.guardian_phone?.trim() || null,
   };
 }
@@ -229,8 +227,6 @@ function sanitizePatch(
   if (p.jersey_number !== undefined) out.jersey_number = num(p.jersey_number);
   if (p.position !== undefined) out.position = p.position?.trim() || null;
   if (p.height_cm !== undefined) out.height_cm = num(p.height_cm);
-  if (p.guardian_name !== undefined)
-    out.guardian_name = p.guardian_name?.trim() || null;
   if (p.guardian_phone !== undefined)
     out.guardian_phone = p.guardian_phone?.trim() || null;
 

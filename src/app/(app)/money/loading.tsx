@@ -2,7 +2,7 @@
 // glass stat + glass tabs) and floodlit payment-row skeletons on the light body.
 export default function MoneyLoading() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col bg-[#F4F7FB]" dir="rtl">
+    <main aria-hidden="true" className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col bg-[#F4F7FB]" dir="rtl">
       <header className="pitch-band pitch-band--home px-5 pb-5 pt-7 lg:rounded-b-[28px]">
         <div className="flex items-center gap-3">
           <div className="h-11 w-11 flex-none rounded-xl bg-white/[0.16]" />

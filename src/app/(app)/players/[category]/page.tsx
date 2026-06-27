@@ -32,7 +32,7 @@ export default async function TeamsPage({
       category={category}
       teams={teamsRes.ok ? teamsRes.data : []}
       counts={countsRes.ok ? countsRes.data : {}}
-      loadError={teamsRes.ok ? null : t(teamsRes.error)}
+      loadError={teamsRes.ok ? null : t("load_failed")}
     />
   );
 }
